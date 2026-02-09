@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-import anydbm
+import dbm
 import marshal
 import sys
 import os
 import getopt
-import cPickle as pickle
-from cStringIO import StringIO
+import pickle as pickle
+from io import StringIO
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -41,41 +41,41 @@ def usage():
 
 
 def print_node_tree(db, key="0", name="<rootnode>", prefix=""):
-  print "%s%s (%s)" % (prefix, name, key)
+  print("%s%s (%s)" % (prefix, name, key))
   if name[:1] != "/":
     dict = marshal.loads(db[key])
-    items = dict.items()
+    items = list(dict.items())
     items.sort()
     for entry in items:
       print_node_tree(db, entry[1], entry[0], prefix + "  ")
 
 
 def show_int2str_db(fname):
-  db = anydbm.open(fname, 'r')
-  k = map(int, db.keys())
+  db = dbm.open(fname, 'r')
+  k = list(map(int, list(db.keys())))
   k.sort()
   for i in k:
-    print "%6d: %s" % (i, db[str(i)])
+    print("%6d: %s" % (i, db[str(i)]))
 
 def show_str2marshal_db(fname):
-  db = anydbm.open(fname, 'r')
-  k = db.keys()
+  db = dbm.open(fname, 'r')
+  k = list(db.keys())
   k.sort()
   for i in k:
-    print "%6s: %s" % (i, marshal.loads(db[i]))
+    print("%6s: %s" % (i, marshal.loads(db[i])))
 
 def show_str2pickle_db(fname):
-  db = anydbm.open(fname, 'r')
-  k = db.keys()
+  db = dbm.open(fname, 'r')
+  k = list(db.keys())
   k.sort()
   for i in k:
     o = pickle.loads(db[i])
-    print    "%6s: %r" % (i, o)
-    print "        %s" % (o,)
+    print("%6s: %r" % (i, o))
+    print("        %s" % (o,))
 
 def show_str2ppickle_db(fname):
-  db = anydbm.open(fname, 'r')
-  k = db.keys()
+  db = dbm.open(fname, 'r')
+  k = list(db.keys())
   k.remove('_')
   k.sort(key=lambda s: int(s, 16))
   u1 = pickle.Unpickler(StringIO(db['_']))
@@ -84,15 +84,15 @@ def show_str2ppickle_db(fname):
     u2 = pickle.Unpickler(StringIO(db[i]))
     u2.memo = u1.memo.copy()
     o = u2.load()
-    print    "%6s: %r" % (i, o)
-    print "        %s" % (o,)
+    print("%6s: %r" % (i, o))
+    print("        %s" % (o,))
 
 def show_cvsitemstore():
   for cvs_file_items in Ctx()._cvs_items_db.iter_cvs_file_items():
-    items = cvs_file_items.values()
+    items = list(cvs_file_items.values())
     items.sort(key=lambda i: i.id)
     for item in items:
-      print    "%6x: %r" % (item.id, item,)
+      print("%6x: %r" % (item.id, item,))
 
 
 def show_filtered_cvs_item_store():
@@ -102,11 +102,11 @@ def show_filtered_cvs_item_store():
       artifact_manager.get_temp_file(config.CVS_ITEMS_FILTERED_INDEX_TABLE),
       DB_OPEN_READ)
 
-  ids = list(db.iterkeys())
+  ids = list(db.keys())
   ids.sort()
   for id in ids:
     cvs_item = db[id]
-    print    "%6x: %r" % (cvs_item.id, cvs_item,)
+    print("%6x: %r" % (cvs_item.id, cvs_item,))
 
 
 
@@ -171,19 +171,19 @@ def main():
       except ValueError:
         sys.stderr.write('Option -r requires a valid revision number\n')
         sys.exit(1)
-      db = anydbm.open(config.SVN_MIRROR_REVISIONS_TABLE, 'r')
+      db = dbm.open(config.SVN_MIRROR_REVISIONS_TABLE, 'r')
       key = db[str(revnum)]
       db.close()
-      db = anydbm.open(config.SVN_MIRROR_NODES_STORE, 'r')
+      db = dbm.open(config.SVN_MIRROR_NODES_STORE, 'r')
       print_node_tree(db, key, "Revision %d" % revnum)
     elif o == "-m":
       show_str2marshal_db(config.METADATA_DB)
     elif o == "-f":
       prime_ctx()
-      cvs_files = list(Ctx()._cvs_path_db.itervalues())
+      cvs_files = list(Ctx()._cvs_path_db.values())
       cvs_files.sort()
       for cvs_file in cvs_files:
-        print '%6x: %s' % (cvs_file.id, cvs_file,)
+        print('%6x: %s' % (cvs_file.id, cvs_file,))
     elif o == "-c":
       prime_ctx()
       show_str2ppickle_db(
@@ -199,8 +199,8 @@ def main():
       show_filtered_cvs_item_store()
     elif o == "-p":
       obj = pickle.load(open(a))
-      print repr(obj)
-      print obj
+      print(repr(obj))
+      print(obj)
     else:
       usage()
       sys.exit(2)

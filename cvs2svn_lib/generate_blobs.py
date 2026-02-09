@@ -43,7 +43,7 @@ written to a temporary file created with Python's tempfile module."""
 import sys
 import os
 import tempfile
-import cPickle as pickle
+import pickle as pickle
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(sys.argv[0])))
 
@@ -133,7 +133,7 @@ class WriteBlobSink(Sink):
     # The revisions that need marks will definitely be needed, so
     # create records for them now (the rest will be filled in while
     # reading the RCS file):
-    for (rev, mark) in marks.items():
+    for (rev, mark) in list(marks.items()):
       self.revrecs[rev] = RevRecord(rev, mark)
 
     # The RevRecord of the last fulltext that has been reconstructed,
@@ -176,7 +176,7 @@ class WriteBlobSink(Sink):
 
     revrecs_to_remove = [
         revrec
-        for revrec in self.revrecs.itervalues()
+        for revrec in list(self.revrecs.values())
         if not revrec.is_needed()
         ]
     while revrecs_to_remove:

@@ -17,8 +17,8 @@
 import os
 import re
 import fnmatch
-import ConfigParser
-from cStringIO import StringIO
+import configparser
+from io import StringIO
 
 from cvs2svn_lib.common import warning_prefix
 from cvs2svn_lib.log import logger
@@ -142,7 +142,7 @@ class MimeMapper(FilePropertySetter):
           self.mappings[ext] = type
 
     if mime_mappings is not None:
-      for ext, type in mime_mappings.iteritems():
+      for ext, type in list(mime_mappings.items()):
         ext = self.transform_case(ext)
         if ext in self.mappings and self.mappings[ext] != type:
           logger.error(
@@ -227,7 +227,7 @@ class AutoPropsPropertySetter(FilePropertySetter):
       return fnmatch.fnmatch(basename, self.pattern)
 
   def __init__(self, configfilename, ignore_case=True):
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     if ignore_case:
       self.transform_case = _squash_case
     else:
@@ -319,7 +319,7 @@ class AutoPropsPropertySetter(FilePropertySetter):
     propdict = {}
     for pattern in self.patterns:
       if pattern.match(basename):
-        for (key,value) in pattern.propdict.items():
+        for (key,value) in list(pattern.propdict.items()):
           if key in propdict:
             if propdict[key] != value:
               logger.warn(
@@ -332,7 +332,7 @@ class AutoPropsPropertySetter(FilePropertySetter):
 
   def set_properties(self, cvs_file):
     propdict = self.get_propdict(cvs_file)
-    for (k,v) in propdict.items():
+    for (k,v) in list(propdict.items()):
       if k in cvs_file.properties:
         if cvs_file.properties[k] != v:
           logger.warn(

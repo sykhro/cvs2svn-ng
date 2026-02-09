@@ -26,7 +26,7 @@
 import os
 import sys
 import re
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import logging
 import pprint
 
@@ -35,7 +35,7 @@ if sys.version_info[0] >= 3:
   from io import StringIO
 else:
   # Python <3.0
-  from cStringIO import StringIO
+  from io import StringIO
 
 import svntest
 
@@ -141,7 +141,7 @@ class State:
 
     if parent and parent[-1] != '/':
       parent += '/'
-    for path, item in state.desc.items():
+    for path, item in list(state.desc.items()):
       path = parent + path
       self.desc[path] = item
 
@@ -154,7 +154,7 @@ class State:
     "Remove PATHS recursively from the state (the paths must exist)."
     for subtree_path in paths:
       subtree_path = to_relpath(subtree_path)
-      for path, item in self.desc.items():
+      for path, item in list(self.desc.items()):
         if path == subtree_path or path[:len(subtree_path) + 1] == subtree_path + '/':
           del self.desc[path]
 
@@ -162,7 +162,7 @@ class State:
     """Make a deep copy of self.  If NEW_ROOT is not None, then set the
     copy's wc_dir NEW_ROOT instead of to self's wc_dir."""
     desc = { }
-    for path, item in self.desc.items():
+    for path, item in list(self.desc.items()):
       desc[path] = item.copy()
     if new_root is None:
       new_root = self.wc_dir
@@ -183,17 +183,17 @@ class State:
       for path in args:
         try:
           path_ref = self.desc[to_relpath(path)]
-        except KeyError, e:
+        except KeyError as e:
           e.args = ["Path '%s' not present in WC state descriptor" % path]
           raise
         path_ref.tweak(**kw)
     else:
-      for item in self.desc.values():
+      for item in list(self.desc.values()):
         item.tweak(**kw)
 
   def tweak_some(self, filter, **kw):
     "Tweak the items for which the filter returns true."
-    for path, item in self.desc.items():
+    for path, item in list(self.desc.items()):
       if list(filter(path, item)):
         item.tweak(**kw)
 
@@ -202,7 +202,7 @@ class State:
     beneath SUBTREE_PATH (which is assumed to be rooted at the tree of
     this State object's WC_DIR).  Exclude SUBTREE_PATH itself."""
     desc = { }
-    for path, item in self.desc.items():
+    for path, item in list(self.desc.items()):
       if path[:len(subtree_path) + 1] == subtree_path + '/':
         desc[path[len(subtree_path) + 1:]] = item.copy()
     return State(self.wc_dir, desc)
@@ -216,7 +216,7 @@ class State:
     if not os.path.exists(target_dir):
       os.makedirs(target_dir)
 
-    for path, item in self.desc.items():
+    for path, item in list(self.desc.items()):
       fullpath = os.path.join(target_dir, path)
       if item.contents is None:
         # a directory
@@ -255,7 +255,7 @@ class State:
     base = to_relpath(os.path.normpath(self.wc_dir))
 
     desc = dict([(repos_join(base, path), item)
-                 for path, item in self.desc.items()])
+                 for path, item in list(self.desc.items())])
     return State('', desc)
 
   def compare(self, other):
@@ -323,7 +323,7 @@ class State:
     raise svntest.tree.SVNTreeUnequal
 
   def tweak_for_entries_compare(self):
-    for path, item in self.desc.copy().items():
+    for path, item in list(self.desc.copy().items()):
       if item.status:
         # If this is an unversioned tree-conflict, remove it.
         # These are only in their parents' THIS_DIR, they don't have entries.
@@ -366,7 +366,7 @@ class State:
   def old_tree(self):
     "Return an old-style tree (for compatibility purposes)."
     nodelist = [ ]
-    for path, item in self.desc.items():
+    for path, item in list(self.desc.items()):
       nodelist.append(item.as_node_tuple(os.path.join(self.wc_dir, path)))
 
     tree = svntest.tree.build_generic_tree(nodelist)
@@ -541,10 +541,10 @@ class State:
         desc[repos_join(parent, name)] = StateItem(contents=contents)
 
     if load_props:
-      paths = [os.path.join(base, to_ospath(p)) for p in desc.keys()]
+      paths = [os.path.join(base, to_ospath(p)) for p in list(desc.keys())]
       paths.append(base)
       all_props = svntest.tree.get_props(paths)
-      for node, props in all_props.items():
+      for node, props in list(all_props.items()):
         if node == base:
           desc['.'] = StateItem(props=props)
         else:
@@ -597,7 +597,7 @@ class State:
 
       parent_url = entries[''].url
 
-      for name, entry in entries.items():
+      for name, entry in list(entries.items()):
         # if the entry is marked as DELETED *and* it is something other than
         # schedule-add, then skip it. we can add a new node "over" where a
         # DELETED node lives.
@@ -688,7 +688,7 @@ class StateItem:
     return new
 
   def tweak(self, **kw):
-    for name, value in kw.items():
+    for name, value in list(kw.items()):
       # Refine the revision args (for now) to ensure they are strings.
       if value is not None and name == 'wc_rev':
         value = str(value)
@@ -697,9 +697,9 @@ class StateItem:
   def __eq__(self, other):
     if not isinstance(other, StateItem):
       return False
-    v_self = dict([(k, v) for k, v in vars(self).items()
+    v_self = dict([(k, v) for k, v in list(vars(self).items())
                    if not k.startswith('_')])
-    v_other = dict([(k, v) for k, v in vars(other).items()
+    v_other = dict([(k, v) for k, v in list(vars(other).items())
                     if not k.startswith('_')])
     if self.treeconflict is None:
       v_other = v_other.copy()
@@ -835,7 +835,7 @@ def repos_join(base, path):
 def svn_uri_quote(url):
   # svn defines a different set of "safe" characters than Python does, so
   # we need to avoid escaping them. see subr/path.c:uri_char_validity[]
-  return urllib.quote(url, "!$&'()*+,-./:=@_~")
+  return urllib.parse.quote(url, "!$&'()*+,-./:=@_~")
 
 
 # ------------

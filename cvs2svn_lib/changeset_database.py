@@ -59,7 +59,7 @@ class ChangesetDatabase(IndexedStore):
     self.add(changeset)
 
   def keys(self):
-    return list(self.iterkeys())
+    return list(self.keys())
 
   def close(self):
     IndexedStore.close(self)

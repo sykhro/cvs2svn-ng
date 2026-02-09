@@ -33,7 +33,7 @@ import sys
 import os
 import shutil
 import optparse
-from cStringIO import StringIO
+from io import StringIO
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -281,7 +281,7 @@ def create_modification(mods):
 
 def compute_dir_size(path):
     # Add a little bit for the directory itself.
-    size = 100L
+    size = 100
     for filename in os.listdir(path):
         subpath = os.path.join(path, filename)
         if os.path.isdir(subpath):
@@ -446,7 +446,7 @@ def get_tag_set(path):
 
         def get_tags(self):
             tags = self.tags
-            for branch in self.branches.values():
+            for branch in list(self.branches.values()):
                 tags.add(branch)
             return tags
 
@@ -739,7 +739,7 @@ def main():
         sys.stdout.write('Testing with the original repository.\n')
         try:
             test_command()
-        except CommandFailedException, e:
+        except CommandFailedException as e:
             sys.stderr.write(first_fail_message)
             sys.exit(1)
         sys.stdout.write(
@@ -754,7 +754,7 @@ def main():
     finally:
         try:
             os.rmdir(tmpdir)
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write('ERROR: %s (ignored)\n' % (e,))
 
 

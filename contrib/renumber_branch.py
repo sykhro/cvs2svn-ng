@@ -44,8 +44,8 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from cvs2svn_lib.rcsparser import parse
-from rcs_file_filter import WriteRCSFileSink
-from rcs_file_filter import FilterSink
+from .rcs_file_filter import WriteRCSFileSink
+from .rcs_file_filter import FilterSink
 
 
 class RenumberingFilter(FilterSink):

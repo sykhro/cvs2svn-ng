@@ -16,7 +16,7 @@
 
 import sys
 import os
-import cPickle
+import pickle
 
 from cvs2svn_lib.common import DB_OPEN_NEW
 from cvs2svn_lib.common import warning_prefix
@@ -35,8 +35,8 @@ except ImportError:
   pass
 
 # 2. These DBM modules are not good for cvs2svn.
-import anydbm
-if anydbm._defaultmod.__name__ in ['dumbdbm', 'dbm']:
+import dbm.ndbm
+if dbm.ndbm._defaultmod.__name__ in ['dumbdbm', 'dbm']:
   logger.error(
       '%s: cvs2svn uses the anydbm package, which depends on lower level '
           'dbm\n'
@@ -46,14 +46,14 @@ if anydbm._defaultmod.__name__ in ['dumbdbm', 'dbm']:
       'dumbdbm or dbm.  See '
           'http://python.org/doc/current/lib/module-anydbm.html\n'
       'for more information.\n'
-      % (error_prefix, anydbm._defaultmod.__name__,)
+      % (error_prefix, dbm.ndbm._defaultmod.__name__,)
       )
   sys.exit(1)
 
 # 3. If we are using the old bsddb185 module, then try prefer gdbm instead.
 #    Unfortunately, gdbm appears not to be trouble free, either.
-if hasattr(anydbm._defaultmod, 'bsddb') \
-    and not hasattr(anydbm._defaultmod.bsddb, '__version__'):
+if hasattr(dbm.ndbm._defaultmod, 'bsddb') \
+    and not hasattr(dbm.ndbm._defaultmod.bsddb, '__version__'):
   try:
     gdbm = __import__('gdbm')
   except ImportError:
@@ -65,7 +65,7 @@ if hasattr(anydbm._defaultmod, 'bsddb') \
         % (warning_prefix,)
         )
   else:
-    anydbm._defaultmod = gdbm
+    dbm.ndbm._defaultmod = gdbm
 
 
 class Database:
@@ -97,12 +97,12 @@ class Database:
     # we know that for bsddb - but *not* anydbm in general - the database
     # consists of one file with the name we specify, rather than several
     # based on that name).
-    if mode == DB_OPEN_NEW and anydbm._defaultmod.__name__ == 'dbhash':
+    if mode == DB_OPEN_NEW and dbm.ndbm._defaultmod.__name__ == 'dbhash':
       if os.path.isfile(filename):
         os.unlink(filename)
-      self.db = anydbm.open(filename, 'c')
+      self.db = dbm.ndbm.open(filename, 'c')
     else:
-      self.db = anydbm.open(filename, mode)
+      self.db = dbm.ndbm.open(filename, mode)
 
     # Import implementations for many mapping interface methods.
     for meth_name in ('__delitem__',
@@ -113,9 +113,9 @@ class Database:
 
     if mode == DB_OPEN_NEW:
       self.serializer = serializer
-      self.db[self.serializer_key] = cPickle.dumps(self.serializer)
+      self.db[self.serializer_key] = pickle.dumps(self.serializer)
     else:
-      self.serializer = cPickle.loads(self.db[self.serializer_key])
+      self.serializer = pickle.loads(self.db[self.serializer_key])
 
   def __getitem__(self, key):
     return self.serializer.loads(self.db[key])
@@ -129,12 +129,12 @@ class Database:
     del self.db[key]
 
   def keys(self):
-    retval = self.db.keys()
+    retval = list(self.db.keys())
     retval.remove(self.serializer_key)
     return retval
 
   def __iter__(self):
-    for key in self.keys():
+    for key in list(self.keys()):
       yield key
 
   def has_key(self, key):
@@ -145,20 +145,20 @@ class Database:
       return False
 
   def __contains__(self, key):
-    return self.has_key(key)
+    return key in self
 
   def iterkeys(self):
     return self.__iter__()
 
   def clear(self):
-    for key in self.keys():
+    for key in list(self.keys()):
       del self[key]
 
   def items(self):
-    return [(key, self[key],) for key in self.keys()]
+    return [(key, self[key],) for key in list(self.keys())]
 
   def values(self):
-    return [self[key] for key in self.keys()]
+    return [self[key] for key in list(self.keys())]
 
   def get(self, key, default=None):
     try:

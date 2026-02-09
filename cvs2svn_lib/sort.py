@@ -73,7 +73,7 @@ def merge(iterables, key=None):
   for index, iterable in enumerate(iterables):
     try:
       iterator = iter(iterable)
-      value = iterator.next()
+      value = next(iterator)
     except StopIteration:
       pass
     else:
@@ -85,7 +85,7 @@ def merge(iterables, key=None):
     k, index, value, iterator = heapq.heappop(values)
     yield value
     try:
-      value = iterator.next()
+      value = next(iterator)
     except StopIteration:
       pass
     else:
@@ -143,7 +143,7 @@ def tempfile_generator(tempdirs=[]):
   i = 0
   while True:
     (fd, filename) = tempfile.mkstemp(
-        '', 'sort%06i-' % (i,), tempdirs.next(), False
+        '', 'sort%06i-' % (i,), next(tempdirs), False
         )
     os.close(fd)
     yield filename
@@ -183,7 +183,7 @@ def _merge_file_generation(
   while filenames:
     group = filenames[:max_merge]
     del filenames[:max_merge]
-    group_output = tempfiles.next()
+    group_output = next(tempfiles)
     merge_files_onepass(group, group_output, key=key)
     if delete_inputs:
       _try_delete_files(group)
@@ -252,7 +252,7 @@ def sort_file(
         if not current_chunk:
           break
         current_chunk.sort(key=key)
-        filename = tempfiles.next()
+        filename = next(tempfiles)
         filenames.append(filename)
         f = open(filename, 'w+b', BUFSIZE)
         try:

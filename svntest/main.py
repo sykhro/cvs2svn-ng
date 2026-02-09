@@ -33,10 +33,10 @@ import time
 import threading
 import optparse
 import xml
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import logging
 import hashlib
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 try:
   # Python >=3.0
@@ -45,9 +45,9 @@ try:
   from urllib.parse import unquote as urllib_parse_unquote
 except ImportError:
   # Python <3.0
-  import Queue as queue
-  from urllib import quote as urllib_parse_quote
-  from urllib import unquote as urllib_parse_unquote
+  import queue as queue
+  from urllib.parse import quote as urllib_parse_quote
+  from urllib.parse import unquote as urllib_parse_unquote
 
 import svntest
 from svntest import Failure
@@ -228,7 +228,7 @@ def wrap_ex(func, output):
   def w(*args, **kwds):
     try:
       return func(*args, **kwds)
-    except Failure, ex:
+    except Failure as ex:
       if ex.__class__ != Failure or ex.args:
         ex_args = str(ex)
         if ex_args:
@@ -515,7 +515,7 @@ def run_command_stdin(command, error_expected, bufsize=-1, binary_mode=0,
     # Does the server leak the repository on-disk path?
     # (prop_tests-12 installs a hook script that does that intentionally)
     if any(map(_line_contains_repos_diskpath, lines)) \
-       and not any(map(lambda arg: 'prop_tests-12' in arg, varargs)):
+       and not any(['prop_tests-12' in arg for arg in varargs]):
       raise Failure("Repository diskpath in %s: %r" % (name, lines))
 
   stop = time.time()
@@ -768,7 +768,7 @@ def safe_rmtree(dirname, retry=0):
   """Remove the tree at DIRNAME, making it writable first.
      If DIRNAME is a symlink, only remove the symlink, not its target."""
   def rmtree(dirname):
-    chmod_tree(dirname, 0666, 0666)
+    chmod_tree(dirname, 0o666, 0o666)
     shutil.rmtree(dirname)
 
   if os.path.islink(dirname):
@@ -884,7 +884,7 @@ def create_repos(path, minor_version = None):
         new_contents = new_contents[:-1]
 
       # replace it
-      os.chmod(format_file_path, 0666)
+      os.chmod(format_file_path, 0o666)
       file_write(format_file_path, new_contents, 'wb')
 
     # post-commit
@@ -901,7 +901,7 @@ def create_repos(path, minor_version = None):
           % repr([svnadmin_binary, 'pack', abs_path]))
 
   # make the repos world-writeable, for mod_dav_svn's sake.
-  chmod_tree(path, 0666, 0666)
+  chmod_tree(path, 0o666, 0o666)
 
 # For copying a repository
 def copy_repos(src_path, dst_path, head_revision, ignore_uuid = 1,
@@ -1007,7 +1007,7 @@ def create_python_hook_script(hook_path, hook_script_code,
   else:
     # For all other platforms
     file_write(hook_path, "#!%s\n%s" % (sys.executable, hook_script_code))
-    os.chmod(hook_path, 0755)
+    os.chmod(hook_path, 0o755)
 
 def write_restrictive_svnserve_conf(repo_dir, anon_access="none"):
   "Create a restrictive authz file ( no anynomous access )."
@@ -1049,10 +1049,10 @@ an appropriate list of mappings.
   else:
     prefix = ""
   if sections:
-    for p, r in sections.items():
+    for p, r in list(sections.items()):
       fp.write("[%s]\n%s\n" % (p, r))
 
-  for p, r in rules.items():
+  for p, r in list(rules.items()):
     fp.write("[%s%s]\n%s\n" % (prefix, p, r))
   fp.close()
 
@@ -1320,7 +1320,7 @@ class TestRunner:
             # A safe starting assumption.
             milestone = 'unknown'
             if milestones_dict:
-              if milestones_dict.has_key(str(issue)):
+              if str(issue) in milestones_dict:
                 milestone = milestones_dict[str(issue)]
 
             filter_issues.append(str(issue) + '(' + milestone + ')')
@@ -1340,10 +1340,10 @@ class TestRunner:
         if self.pred.inprogress:
           tail += " [[%s]]" % self.pred.inprogress
         else:
-          print(" %3d    %-5s  %s%s" % (self.index,
+          print((" %3d    %-5s  %s%s" % (self.index,
                                         self.pred.list_mode(),
                                         self.pred.description,
-                                        tail))
+                                        tail)))
     sys.stdout.flush()
 
   def get_mode(self):
@@ -1357,16 +1357,16 @@ class TestRunner:
 
   def _print_name(self, prefix):
     if self.pred.inprogress:
-      print("%s %s %s: %s [[WIMP: %s]]" % (prefix,
+      print(("%s %s %s: %s [[WIMP: %s]]" % (prefix,
                                            os.path.basename(sys.argv[0]),
                                            str(self.index),
                                            self.pred.description,
-                                           self.pred.inprogress))
+                                           self.pred.inprogress)))
     else:
-      print("%s %s %s: %s" % (prefix,
+      print(("%s %s %s: %s" % (prefix,
                               os.path.basename(sys.argv[0]),
                               str(self.index),
-                              self.pred.description))
+                              self.pred.description)))
     sys.stdout.flush()
 
   def run(self):
@@ -1405,9 +1405,9 @@ class TestRunner:
         print('Test driver returned a status code.')
         sys.exit(255)
       result = svntest.testcase.RESULT_OK
-    except Skip, ex:
+    except Skip as ex:
       result = svntest.testcase.RESULT_SKIP
-    except Failure, ex:
+    except Failure as ex:
       result = svntest.testcase.RESULT_FAIL
       msg = ''
       # We captured Failure and its subclasses. We don't want to print
@@ -1425,7 +1425,7 @@ class TestRunner:
     except KeyboardInterrupt:
       logger.error('Interrupted')
       sys.exit(0)
-    except SystemExit, ex:
+    except SystemExit as ex:
       logger.error('EXCEPTION: SystemExit(%d), skipping cleanup' % ex.code)
       self._print_name(ex.code and 'FAIL: ' or 'PASS: ')
       raise
@@ -1460,7 +1460,7 @@ def run_one_test(n, test_list, finished_tests = None):
   # allow N to be negative, so './basic_tests.py -- -1' works
   num_tests = len(test_list) - 1
   if (n == 0) or (abs(n) > num_tests):
-    print("There is no test %s.\n" % n)
+    print(("There is no test %s.\n" % n))
     return 1
   if n < 0:
     n += 1+num_tests
@@ -1627,7 +1627,7 @@ def _create_parser():
   parser.set_defaults(
         server_minor_version=SVN_VER_MINOR,
         url=file_scheme_prefix + \
-                        urllib.pathname2url(os.path.abspath(os.getcwd())),
+                        urllib.request.pathname2url(os.path.abspath(os.getcwd())),
         http_library=_default_http_library)
 
   return parser
@@ -1648,7 +1648,7 @@ def _parse_options(arglist=sys.argv[1:]):
 
   # If you change the below condition then change
   # ../../../../build/run_tests.py too.
-  if options.server_minor_version not in range(3, SVN_VER_MINOR+1):
+  if options.server_minor_version not in list(range(3, SVN_VER_MINOR+1)):
     parser.error("test harness only supports server minor versions 3-%d"
                  % SVN_VER_MINOR)
 
@@ -1688,10 +1688,10 @@ def get_target_milestones_for_issues(issue_numbers):
 
   try:
     # Parse the xml for ISSUE_NO from the issue tracker into a Document.
-    issue_xml_f = urllib.urlopen(xml_url)
+    issue_xml_f = urllib.request.urlopen(xml_url)
   except:
-    print "WARNING: Unable to contact issue tracker; " \
-          "milestones defaulting to 'unknown'."
+    print("WARNING: Unable to contact issue tracker; " \
+          "milestones defaulting to 'unknown'.")
     return issue_dict
 
   try:
@@ -1707,7 +1707,7 @@ def get_target_milestones_for_issues(issue_numbers):
       milestone = milestone_element[0].childNodes[0].nodeValue
       issue_dict[issue_id] = milestone
   except:
-    print "ERROR: Unable to parse target milestones from issue tracker"
+    print("ERROR: Unable to parse target milestones from issue tracker")
     raise
 
   return issue_dict
@@ -1846,7 +1846,7 @@ def execute_tests(test_list, serial_only = False, test_name = None,
 
   # Calculate pristine_greek_repos_url from test_area_url.
   pristine_greek_repos_url = options.test_area_url + '/' + \
-                                urllib.pathname2url(pristine_greek_repos_dir)
+                                urllib.request.pathname2url(pristine_greek_repos_dir)
 
   if options.use_jsvn:
     if options.svn_bin is None:
@@ -1898,7 +1898,7 @@ def execute_tests(test_list, serial_only = False, test_name = None,
                 options.mode_filter.upper() == test_mode or
                 (options.mode_filter.upper() == 'PASS' and test_mode == '')):
               issues_dict[issue]=issue
-      milestones_dict = get_target_milestones_for_issues(issues_dict.keys())
+      milestones_dict = get_target_milestones_for_issues(list(issues_dict.keys()))
 
     header = "Test #  Mode   Test Description\n" \
              "------  -----  ----------------"
@@ -1909,7 +1909,7 @@ def execute_tests(test_list, serial_only = False, test_name = None,
          or options.mode_filter.upper() == test_mode \
          or (options.mode_filter.upper() == 'PASS' and test_mode == ''):
         if not printed_header:
-          print header
+          print(header)
           printed_header = True
         TestRunner(test_list[testnum], testnum).list(milestones_dict)
     # We are simply listing the tests so always exit with success.

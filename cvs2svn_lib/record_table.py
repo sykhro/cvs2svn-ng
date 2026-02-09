@@ -52,7 +52,7 @@ class Packer(object):
     if empty_value is None:
       self.empty_value = '\0' * self.record_len
     else:
-      assert type(empty_value) is types.StringType
+      assert type(empty_value) is bytes
       assert len(empty_value) == self.record_len
       self.empty_value = empty_value
 
@@ -196,7 +196,7 @@ class AbstractRecordTable:
   def iterkeys(self):
     """Yield the keys in the map in key order."""
 
-    for i in xrange(0, self._limit):
+    for i in range(0, self._limit):
       try:
         self[i]
         yield i
@@ -208,7 +208,7 @@ class AbstractRecordTable:
 
     Skip over values that haven't been defined."""
 
-    for i in xrange(0, self._limit):
+    for i in range(0, self._limit):
       try:
         yield self[i]
       except KeyError:
@@ -257,7 +257,7 @@ class RecordTable(AbstractRecordTable):
   def flush(self):
     logger.debug('Flushing cache for %s' % (self,))
 
-    pairs = [(i, s) for (i, (dirty, s)) in self._cache.items() if dirty]
+    pairs = [(i, s) for (i, (dirty, s)) in list(self._cache.items()) if dirty]
 
     if pairs:
       pairs.sort()

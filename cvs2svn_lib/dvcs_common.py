@@ -157,9 +157,9 @@ class DVCSOutputOption(OutputOption):
 
     result = {}
     if author_transforms is not None:
-      for (cvsauthor, dvcsauthor) in author_transforms.iteritems():
+      for (cvsauthor, dvcsauthor) in list(author_transforms.items()):
         cvsauthor = to_utf8(cvsauthor)
-        if isinstance(dvcsauthor, basestring):
+        if isinstance(dvcsauthor, str):
           dvcsauthor = to_utf8(dvcsauthor)
         else:
           (name, email,) = dvcsauthor
@@ -218,7 +218,7 @@ class DVCSOutputOption(OutputOption):
     # {CVSSymbol : SVNRevisionRange}}:
     lod_range_maps = {}
 
-    for (cvs_symbol, range) in range_map.iteritems():
+    for (cvs_symbol, range) in list(range_map.items()):
       lod_range_map = lod_range_maps.get(range.source_lod)
       if lod_range_map is None:
         lod_range_map = {}
@@ -227,20 +227,17 @@ class DVCSOutputOption(OutputOption):
 
     # Sort the sources so that the branch that serves most often as
     # parent is processed first:
-    lod_ranges = lod_range_maps.items()
-    lod_ranges.sort(
-        lambda (lod1,lod_range_map1),(lod2,lod_range_map2):
-        -cmp(len(lod_range_map1), len(lod_range_map2)) or cmp(lod1, lod2)
-        )
+    lod_ranges = list(lod_range_maps.items())
+    lod_ranges.sort(key=lambda item: (-len(item[1]), item[0]))
 
     source_groups = []
     for (lod, lod_range_map) in lod_ranges:
       while lod_range_map:
-        revision_scores = RevisionScores(lod_range_map.values())
+        revision_scores = RevisionScores(list(lod_range_map.values()))
         (source_lod, revnum, score) = revision_scores.get_best_revnum()
         assert source_lod == lod
         cvs_symbols = []
-        for (cvs_symbol, range) in lod_range_map.items():
+        for (cvs_symbol, range) in list(lod_range_map.items()):
           if revnum in range:
             cvs_symbols.append(cvs_symbol)
             del lod_range_map[cvs_symbol]
@@ -393,7 +390,7 @@ class MirrorUpdater(object):
 
 
 def to_utf8(s):
-  if isinstance(s, unicode):
+  if isinstance(s, str):
     return s.encode('utf8')
   else:
     return s

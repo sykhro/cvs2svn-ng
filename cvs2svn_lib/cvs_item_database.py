@@ -15,7 +15,7 @@
 
 
 import re
-import cPickle
+import pickle
 
 from cvs2svn_lib.cvs_item import CVSRevisionAdd
 from cvs2svn_lib.cvs_item import CVSRevisionChange
@@ -58,7 +58,7 @@ class NewCVSItemStore:
     self.serializer = PrimedPickleSerializer(
         cvs_item_primer + (CVSFileItems,)
         )
-    cPickle.dump(self.serializer, self.f, -1)
+    pickle.dump(self.serializer, self.f, -1)
 
   def add(self, cvs_file_items):
     """Write CVS_FILE_ITEMS into the database."""
@@ -80,7 +80,7 @@ class OldCVSItemStore:
     self.f = open(filename, 'rb')
 
     # Read the memo from the first pickle:
-    self.serializer = cPickle.load(self.f)
+    self.serializer = pickle.load(self.f)
 
   def iter_cvs_file_items(self):
     """Iterate through the CVSFileItems instances, one file at a time.

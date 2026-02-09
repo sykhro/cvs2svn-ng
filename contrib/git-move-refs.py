@@ -44,16 +44,16 @@ def move_ref(ref, from_commit, to_commit, ref_type):
     ref_type is either "tags" or "heads"
     """
     if from_commit != to_commit:
-        print "Moving ref %s from %s to %s..." % (ref, from_commit, to_commit),
+        print("Moving ref %s from %s to %s..." % (ref, from_commit, to_commit), end=' ')
         if ref_type == "tags":
             command = "tag"
         else:
             command = "branch"
         retcode = call(["git", command, "-f", ref, to_commit])
         if retcode == 0:
-            print "done"
+            print("done")
         else:
-            print "FAILED"
+            print("FAILED")
 
 
 def try_to_move_ref(ref, commit, tree, parents, ref_type):

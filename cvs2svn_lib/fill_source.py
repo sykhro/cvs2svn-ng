@@ -133,7 +133,7 @@ class FillSource:
     else:
       # It is an intermediate node.
       revision_ranges = []
-      for key, subnode in node.items():
+      for key, subnode in list(node.items()):
         revision_ranges.extend(self._get_revision_ranges(subnode))
       return revision_ranges
 
@@ -141,7 +141,7 @@ class FillSource:
     """Generate (CVSPath, FillSource) for all direct subsources."""
 
     if not isinstance(self._node_tree, SVNRevisionRange):
-      for cvs_path, node in self._node_tree.items():
+      for cvs_path, node in list(self._node_tree.items()):
         fill_source = FillSource(cvs_path, self._symbol, node)
         yield (cvs_path, fill_source)
 
@@ -181,7 +181,7 @@ def get_source_set(symbol, range_map):
   root_cvs_directory = symbol.project.get_root_cvs_directory()
   fill_source = FillSource(root_cvs_directory, symbol, {})
 
-  for cvs_symbol, svn_revision_range in range_map.items():
+  for cvs_symbol, svn_revision_range in list(range_map.items()):
     fill_source._set_node(cvs_symbol.cvs_file, svn_revision_range)
 
   return fill_source

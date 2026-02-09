@@ -24,7 +24,7 @@
 import os
 import shutil
 import copy
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import logging
 
 import svntest
@@ -60,7 +60,7 @@ class Sandbox:
     if not read_only:
       self.repo_dir = os.path.join(svntest.main.general_repo_dir, self.name)
       self.repo_url = (svntest.main.options.test_area_url + '/'
-                       + urllib.pathname2url(self.repo_dir))
+                       + urllib.request.pathname2url(self.repo_dir))
       self.add_test_path(self.repo_dir)
     else:
       self.repo_dir = svntest.main.pristine_greek_repos_dir
@@ -136,7 +136,7 @@ class Sandbox:
     path = (os.path.join(svntest.main.general_repo_dir, self.name)
             + '.' + suffix)
     url = svntest.main.options.test_area_url + \
-                                        '/' + urllib.pathname2url(path)
+                                        '/' + urllib.request.pathname2url(path)
     self.add_test_path(path, remove)
     return path, url
 

@@ -71,14 +71,14 @@ class SVNOutputOption(OutputOption):
     self._mirror = RepositoryMirror()
 
     def to_utf8(s):
-      if isinstance(s, unicode):
+      if isinstance(s, str):
         return s.encode('utf8')
       else:
         return s
 
     self.author_transforms = {}
     if author_transforms is not None:
-      for (cvsauthor, name) in author_transforms.iteritems():
+      for (cvsauthor, name) in list(author_transforms.items()):
         cvsauthor = to_utf8(cvsauthor)
         name = to_utf8(name)
         self.author_transforms[cvsauthor] = name
@@ -116,7 +116,7 @@ class SVNOutputOption(OutputOption):
     # Check that all included LODs have their base paths set, and
     # collect the paths into a list:
     paths = []
-    for lod in symbol_map.itervalues():
+    for lod in list(symbol_map.values()):
       if isinstance(lod, LineOfDevelopment):
         if lod.base_path is None:
           logger.error('%s: No path was set for %r\n' % (error_prefix, lod,))
@@ -127,7 +127,7 @@ class SVNOutputOption(OutputOption):
     # Check that the SVN paths of all LODS are disjoint:
     try:
       verify_paths_disjoint(*paths)
-    except PathsNotDisjointException, e:
+    except PathsNotDisjointException as e:
       logger.error(str(e))
       error_found = True
 
@@ -463,7 +463,7 @@ class SVNOutputOption(OutputOption):
     was copied in this revision, COPY_SOURCE should indicate where it
     was copied from; otherwise, COPY_SOURCE should be None."""
 
-    cvs_paths = src_entries.keys()
+    cvs_paths = list(src_entries.keys())
     cvs_paths.sort()
     for cvs_path in cvs_paths:
       if isinstance(cvs_path, CVSDirectory):
@@ -715,7 +715,7 @@ class RepositoryOutputOption(SVNOutputOption):
       # should be harmless.
       try:
         check_command_runs([Ctx().svnadmin_executable, 'help'], 'svnadmin')
-      except CommandFailedException, e:
+      except CommandFailedException as e:
         raise FatalError(
             '%s\n'
             'svnadmin could not be executed.  Please ensure that it is\n'

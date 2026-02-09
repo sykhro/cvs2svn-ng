@@ -18,7 +18,7 @@
 import sys
 import os
 import glob
-from cStringIO import StringIO
+from io import StringIO
 from difflib import Differ
 
 # Since there is nontrivial logic in __init__.py, we have to import
@@ -27,8 +27,8 @@ from difflib import Differ
 script_dir = os.path.dirname(sys.argv[0])
 sys.path.insert(0, script_dir)
 
-from __init__ import parse
-from parse_rcs_file import LoggingSink
+from .__init__ import parse
+from .parse_rcs_file import LoggingSink
 
 
 test_dir = os.path.join(script_dir, 'test-data')
@@ -43,7 +43,7 @@ for filename in filelist:
     f = StringIO()
     try:
         parse(open(filename, 'rb'), LoggingSink(f))
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write('Error parsing file: %s!\n' % (e,))
         all_tests_ok = 0
     else:

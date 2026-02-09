@@ -69,13 +69,13 @@ def do_it():
   symbols.update(tags)
   symbols.update(branches)
 
-  num_symbols = len(symbols.keys())
-  num_tags = len(tags.keys())
-  num_branches = len(branches.keys())
+  num_symbols = len(list(symbols.keys()))
+  num_tags = len(list(tags.keys()))
+  num_branches = len(list(branches.keys()))
   avg_tags = total_tags * 1.0 / line_count
   avg_branches = total_branches * 1.0 / line_count
 
-  print '   Total CVS Revisions: %d\n' \
+  print('   Total CVS Revisions: %d\n' \
         '     Total Unique Tags: %d\n' \
         '    Peak Revision Tags: %d\n' \
         '    Avg. Tags/Revision: %2.1f\n' \
@@ -92,15 +92,15 @@ def do_it():
            avg_branches,
            num_symbols,
            num_symbols == num_tags + num_branches and ' ' or ' (!)',
-           )
+           ))
 
 
 if __name__ == "__main__":
   argc = len(sys.argv)
   if argc < 2:
-    print 'Usage: %s /path/to/cvs2svn-temporary-directory' \
-        % (os.path.basename(sys.argv[0]))
-    print __doc__
+    print('Usage: %s /path/to/cvs2svn-temporary-directory' \
+        % (os.path.basename(sys.argv[0])))
+    print(__doc__)
     sys.exit(0)
   os.chdir(sys.argv[1])
   do_it()

@@ -185,17 +185,17 @@ class RunOptions(object):
   long_desc = None
   files = None
   authors = [
-    u"C. Michael Pilato <cmpilato@collab.net>",
-    u"Greg Stein <gstein@lyra.org>",
-    u"Branko \u010cibej <brane@xbc.nu>",
-    u"Blair Zajac <blair@orcaware.com>",
-    u"Max Bowsher <maxb@ukf.net>",
-    u"Brian Fitzpatrick <fitz@red-bean.com>",
-    u"Tobias Ringstr\u00f6m <tobias@ringstrom.mine.nu>",
-    u"Karl Fogel <kfogel@collab.net>",
-    u"Erik H\u00fclsmann <e.huelsmann@gmx.net>",
-    u"David Summers <david@summersoft.fay.ar.us>",
-    u"Michael Haggerty <mhagger@alum.mit.edu>",
+    "C. Michael Pilato <cmpilato@collab.net>",
+    "Greg Stein <gstein@lyra.org>",
+    "Branko \\u010cibej <brane@xbc.nu>",
+    "Blair Zajac <blair@orcaware.com>",
+    "Max Bowsher <maxb@ukf.net>",
+    "Brian Fitzpatrick <fitz@red-bean.com>",
+    "Tobias Ringstr\\u00f6m <tobias@ringstrom.mine.nu>",
+    "Karl Fogel <kfogel@collab.net>",
+    "Erik H\\u00fclsmann <e.huelsmann@gmx.net>",
+    "David Summers <david@summersoft.fay.ar.us>",
+    "Michael Haggerty <mhagger@alum.mit.edu>",
     ]
   see_also = None
 
@@ -864,7 +864,7 @@ class RunOptions(object):
       ctx.cvs_author_decoder.add_encoding(value)
       ctx.cvs_log_decoder.add_encoding(value)
       ctx.cvs_filename_decoder.add_encoding(value)
-    except LookupError, e:
+    except LookupError as e:
       raise FatalError(str(e))
 
   def callback_fallback_encoding(self, option, opt_str, value, parser):
@@ -874,7 +874,7 @@ class RunOptions(object):
       ctx.cvs_author_decoder.set_fallback_encoding(value)
       ctx.cvs_log_decoder.set_fallback_encoding(value)
       # Don't use fallback_encoding for filenames.
-    except LookupError, e:
+    except LookupError as e:
       raise FatalError(str(e))
 
   def callback_help_passes(self, option, opt_str, value, parser):
@@ -1130,7 +1130,7 @@ class RunOptions(object):
       'ctx' : Ctx(),
       'run_options' : self,
       }
-    execfile(options_filename, g)
+    exec(compile(open(options_filename, "rb").read(), options_filename, 'exec'), g)
 
   def usage(self):
     self.parser.print_help()

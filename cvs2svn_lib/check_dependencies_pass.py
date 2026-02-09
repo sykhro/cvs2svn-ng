@@ -99,7 +99,7 @@ class CheckItemStoreDependenciesPass(CheckDependenciesPass):
 
     for cvs_file_items in cvs_item_store.iter_cvs_file_items():
       self.current_cvs_file_items = cvs_file_items
-      for cvs_item in cvs_file_items.values():
+      for cvs_item in list(cvs_file_items.values()):
         yield cvs_item
 
     del self.current_cvs_file_items
@@ -122,7 +122,7 @@ class CheckIndexedItemStoreDependenciesPass(CheckDependenciesPass):
     self._register_temp_file_needed(self.cvs_items_store_index_file)
 
   def iter_cvs_items(self):
-    return self.cvs_item_store.itervalues()
+    return iter(list(self.cvs_item_store.values()))
 
   def get_cvs_item(self, item_id):
     return self.cvs_item_store[item_id]

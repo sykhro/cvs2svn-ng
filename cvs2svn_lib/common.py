@@ -97,7 +97,7 @@ def path_join(*components):
   """Join two or more pathname COMPONENTS, inserting '/' as needed.
   Empty component are skipped."""
 
-  return '/'.join(filter(None, components))
+  return '/'.join([_f for _f in components if _f])
 
 
 def path_split(path):
@@ -335,7 +335,7 @@ class CVSTextDecoder:
     Raise UnicodeError if the string cannot be decoded using any of
     the source encodings and no fallback encoding was specified."""
 
-    if isinstance(s, unicode):
+    if isinstance(s, str):
       return s
     for (name, decoder) in self.decoders:
       try:
@@ -361,7 +361,7 @@ class CVSTextDecoder:
     Decode each path component separately (as they may each use
     different encodings)."""
 
-    return u'/'.join([
+    return '/'.join([
         self.decode(piece)
         for piece in path.split('/')
         ])

@@ -404,7 +404,7 @@ class _SymbolDataCollector(object):
     # A set of the indexes of entries that have to be removed from
     # symbol_defs:
     dup_indexes = set()
-    for ((name, revision), indexes) in known_definitions.iteritems():
+    for ((name, revision), indexes) in list(known_definitions.items()):
       if len(indexes) > 1:
         logger.verbose(
             "in %r:\n"
@@ -434,7 +434,7 @@ class _SymbolDataCollector(object):
     for (i, (name, revision)) in enumerate(symbol_defs):
       known_symbols.setdefault(name, []).append(i)
 
-    known_symbols = known_symbols.items()
+    known_symbols = list(known_symbols.items())
     known_symbols.sort()
     dup_indexes = set()
     for (name, indexes) in known_symbols:
@@ -695,7 +695,7 @@ class _FileDataCollector(Sink):
   def _resolve_branch_dependencies(self):
     """Resolve dependencies involving branches."""
 
-    for branch_data in self.sdc.branches_data.values():
+    for branch_data in list(self.sdc.branches_data.values()):
       # The branch_data's parent has the branch as a child regardless
       # of whether the branch had any subsequent commits:
       try:
@@ -732,13 +732,13 @@ class _FileDataCollector(Sink):
     branch number; therefore branch numbers are not an indication of
     creation order.)"""
 
-    for rev_data in self._rev_data.values():
+    for rev_data in list(self._rev_data.values()):
       rev_data.branches_data.sort(lambda a, b: - cmp(a.id, b.id))
 
   def _resolve_tag_dependencies(self):
     """Resolve dependencies involving tags."""
 
-    for (rev, tag_data_list) in self.sdc.tags_data.items():
+    for (rev, tag_data_list) in list(self.sdc.tags_data.items()):
       try:
         parent_data = self._rev_data[rev]
       except KeyError:
@@ -760,7 +760,7 @@ class _FileDataCollector(Sink):
   def _get_cvs_branches(self):
     """Generate the CVSBranches present in this file."""
 
-    for branch_data in self.sdc.branches_data.values():
+    for branch_data in list(self.sdc.branches_data.values()):
       yield CVSBranch(
           branch_data.id, self.cvs_file, branch_data.symbol,
           branch_data.branch_number,
@@ -773,7 +773,7 @@ class _FileDataCollector(Sink):
   def _get_cvs_tags(self):
     """Generate the CVSTags present in this file."""
 
-    for tags_data in self.sdc.tags_data.values():
+    for tags_data in list(self.sdc.tags_data.values()):
       for tag_data in tags_data:
         yield CVSTag(
             tag_data.id, self.cvs_file, tag_data.symbol,
@@ -835,7 +835,7 @@ class _FileDataCollector(Sink):
     This is a callback method declared in Sink."""
 
     # Make sure that there was an info section for each revision:
-    for cvs_item in self._cvs_file_items.values():
+    for cvs_item in list(self._cvs_file_items.values()):
       if isinstance(cvs_item, CVSRevision) and cvs_item.metadata_id is None:
         self.collect_data.record_fatal_error(
             '%r has no deltatext section for revision %s'
@@ -852,7 +852,7 @@ class _FileDataCollector(Sink):
   def _get_cvs_revisions(self):
     """Generate the CVSRevisions present in this file."""
 
-    for rev_data in self._rev_data.itervalues():
+    for rev_data in list(self._rev_data.values()):
       yield self._get_cvs_revision(rev_data)
 
   def _get_cvs_revision(self, rev_data):
@@ -965,7 +965,7 @@ class _FileDataCollector(Sink):
             return
       else:
         return
-    except VendorBranchError, e:
+    except VendorBranchError as e:
       self.collect_data.record_fatal_error(str(e))
       return
 
@@ -1028,7 +1028,7 @@ class _ProjectDataCollector:
   def summarize_symbol_transforms(self):
     if self.symbol_transform_counts and logger.is_on(logger.NORMAL):
       logger.normal('Summary of symbol transforms:')
-      transforms = self.symbol_transform_counts.items()
+      transforms = list(self.symbol_transform_counts.items())
       transforms.sort()
       for ((old_name, new_name), count) in transforms:
         if new_name is None:
@@ -1055,7 +1055,7 @@ class _ProjectDataCollector:
       # Abort the processing of this file, but let the pass continue
       # with other files:
       return
-    except ValueError, e:
+    except ValueError as e:
       self.collect_data.record_fatal_error(
           "%r is not a valid ,v file (%s)" % (cvs_file.rcs_path, str(e),)
           )
@@ -1125,7 +1125,7 @@ class CollectData:
     self._cvs_item_store.add(cvs_file_items)
 
     self.stats_keeper.record_cvs_file(cvs_file_items.cvs_file)
-    for cvs_item in cvs_file_items.values():
+    for cvs_item in list(cvs_file_items.values()):
       self.stats_keeper.record_cvs_item(cvs_item)
 
   def register_trunk(self, trunk):
@@ -1184,10 +1184,10 @@ class CollectData:
 
     directories = set(
         path
-        for path in Ctx()._cvs_path_db.itervalues()
+        for path in list(Ctx()._cvs_path_db.values())
         if isinstance(path, CVSDirectory)
         )
-    for path in Ctx()._cvs_path_db.itervalues():
+    for path in list(Ctx()._cvs_path_db.values()):
       if isinstance(path, CVSFile):
         directory = path.parent_directory
         while directory is not None and directory in directories:

@@ -109,8 +109,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from cvs2svn_lib.key_generator import KeyGenerator
 from cvs2svn_lib.rcsparser import parse
-from rcs_file_filter import WriteRCSFileSink
-from rcs_file_filter import FilterSink
+from .rcs_file_filter import WriteRCSFileSink
+from .rcs_file_filter import FilterSink
 
 
 # Which components to be destroyed. Default to all.
@@ -395,10 +395,10 @@ class FileDestroyer:
 
 def usage_abort(msg):
     if msg:
-        print >>sys.stderr, "ERROR:", msg
-        print >>sys.stderr
+        print("ERROR:", msg, file=sys.stderr)
+        print(file=sys.stderr)
     # Use this file's docstring as a usage string, but only the first part
-    print __doc__.split('\n---->8----', 1)[0]
+    print(__doc__.split('\n---->8----', 1)[0])
     sys.exit(1)
 
 if __name__ == '__main__':
@@ -426,13 +426,13 @@ if __name__ == '__main__':
                 # This makes both positive and negative options work
                 # intuitively (e.g. "--data" will destroy only data, while
                 # "--no-data" will destroy everything BUT data).
-                for d in destroy.keys():
+                for d in list(destroy.keys()):
                     destroy[d] = not value
                 first_option = False
             if option in destroy:
                 destroy[option] = value
             elif option == "all":
-                for d in destroy.keys():
+                for d in list(destroy.keys()):
                     destroy[d] = value
             else:
                 usage_abort("Unknown OPTION '%s'" % arg)

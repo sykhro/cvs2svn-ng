@@ -14,7 +14,7 @@
 """This module processes RCS diffs (deltas)."""
 
 
-from cStringIO import StringIO
+from io import StringIO
 import re
 
 
@@ -84,7 +84,7 @@ def merge_blocks(blocks):
   i = iter(blocks)
 
   try:
-    (command1, old_lines1, new_lines1) = i.next()
+    (command1, old_lines1, new_lines1) = next(i)
   except StopIteration:
     return
 

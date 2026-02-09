@@ -15,7 +15,7 @@
 
 
 import os
-import cPickle
+import pickle
 
 from cvs2svn_lib.context import Ctx
 from cvs2svn_lib.common import FatalError
@@ -39,7 +39,7 @@ class FileInAndOutOfAtticException(Exception):
 def normalize_ttb_path(opt, path, allow_empty=False):
   try:
     return normalize_svn_path(path, allow_empty)
-  except IllegalSVNPathError, e:
+  except IllegalSVNPathError as e:
     raise FatalError('Problem with %s: %s' % (opt, e,))
 
 
@@ -88,7 +88,7 @@ class Project(object):
     for path in initial_directories:
       try:
         path = normalize_svn_path(path, False)
-      except IllegalSVNPathError, e:
+      except IllegalSVNPathError as e:
         raise FatalError(
             'Initial directory %r is not a legal SVN path: %s'
             % (path, e,)
@@ -209,7 +209,7 @@ class Project(object):
 def read_projects(filename):
   retval = {}
   f = open(filename, 'rb')
-  for project in cPickle.load(f):
+  for project in pickle.load(f):
     retval[project.id] = project
   f.close()
   return retval
@@ -217,7 +217,7 @@ def read_projects(filename):
 
 def write_projects(filename):
   f = open(filename, 'wb')
-  cPickle.dump(Ctx()._projects.values(), f, -1)
+  pickle.dump(list(Ctx()._projects.values()), f, -1)
   f.close()
 
 

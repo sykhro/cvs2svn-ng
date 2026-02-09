@@ -50,8 +50,8 @@ def pipe(cmd):
 
 
 def cmd_failed(cmd, output, status):
-  print 'CMD FAILED:', ' '.join(cmd)
-  print 'Output:'
+  print('CMD FAILED:', ' '.join(cmd))
+  print('Output:')
   sys.stdout.write(output)
   raise RuntimeError('%s command failed!' % cmd[0])
 
@@ -341,7 +341,7 @@ def transform_symbol(ctx, name):
   for (pattern, replacement) in ctx.symbol_transforms:
     newname = pattern.sub(replacement, name)
     if newname != name:
-      print "   symbol '%s' transformed to '%s'" % (name, newname)
+      print("   symbol '%s' transformed to '%s'" % (name, newname))
       name = newname
 
   return name
@@ -364,7 +364,7 @@ class Failures(object):
       for line in details:
         sys.stdout.write('  %s\n' % line)
 
-  def __nonzero__(self):
+  def __bool__(self):
     return self.count > 0
 
 
@@ -378,8 +378,8 @@ def file_compare(failures, base1, base2, run_diff, rel_path):
   ok = True
   path1 = os.path.join(base1, rel_path)
   path2 = os.path.join(base2, rel_path)
-  mode1 = os.stat(path1).st_mode & 0700   # only look at owner bits
-  mode2 = os.stat(path2).st_mode & 0700
+  mode1 = os.stat(path1).st_mode & 0o700   # only look at owner bits
+  mode2 = os.stat(path2).st_mode & 0o700
   if mode1 != mode2:
     failures.report('File modes differ for %s' % rel_path,
                     details=['%s: %o' % (path1, mode1),
@@ -444,8 +444,8 @@ def tree_compare(failures, base1, base2, run_diff, rel_path=''):
 
   ok = True
 
-  missing = filter(lambda x: x not in entries2, entries1)
-  extra = filter(lambda x: x not in entries1, entries2)
+  missing = [x for x in entries1 if x not in entries2]
+  extra = [x for x in entries2 if x not in entries1]
   if missing:
     failures.report('Directory /%s is missing entries: %s' %
                     (rel_path, ', '.join(missing)))
@@ -517,7 +517,7 @@ def verify_contents(failures, cvsrepos, verifyrepos, ctx):
   locations = []
 
   # Verify contents of trunk
-  print 'Verifying trunk'
+  print('Verifying trunk')
   sys.stdout.flush()
   if not verify_contents_single(
         failures, cvsrepos, verifyrepos, 'trunk', None, ctx
@@ -526,7 +526,7 @@ def verify_contents(failures, cvsrepos, verifyrepos, ctx):
 
   # Verify contents of all tags
   for tag in verifyrepos.tags():
-    print 'Verifying tag', tag
+    print('Verifying tag', tag)
     sys.stdout.flush()
     if not verify_contents_single(
           failures, cvsrepos, verifyrepos, 'tag', tag, ctx
@@ -536,9 +536,9 @@ def verify_contents(failures, cvsrepos, verifyrepos, ctx):
   # Verify contents of all branches
   for branch in verifyrepos.branches():
     if branch[:10] == 'unlabeled-':
-      print 'Skipped branch', branch
+      print('Skipped branch', branch)
     else:
-      print 'Verifying branch', branch
+      print('Verifying branch', branch)
       if not verify_contents_single(
             failures, cvsrepos, verifyrepos, 'branch', branch, ctx
             ):
@@ -642,24 +642,24 @@ def main(argv):
 
     # Do our thing...
     if verify_branch:
-      print 'Verifying branch', verify_branch
+      print('Verifying branch', verify_branch)
       verify_contents_single(
           failures, cvsrepos, verifyrepos, 'branch', verify_branch, options
           )
     elif verify_tag:
-      print 'Verifying tag', verify_tag
+      print('Verifying tag', verify_tag)
       verify_contents_single(
           failures, cvsrepos, verifyrepos, 'tag', verify_tag, options
           )
     elif verify_trunk:
-      print 'Verifying trunk'
+      print('Verifying trunk')
       verify_contents_single(
           failures, cvsrepos, verifyrepos, 'trunk', None, options
           )
     else:
       # Verify trunk, tags and branches
       verify_contents(failures, cvsrepos, verifyrepos, options)
-  except RuntimeError, e:
+  except RuntimeError as e:
     error(str(e))
   except KeyboardInterrupt:
     pass

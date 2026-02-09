@@ -14,7 +14,7 @@
 """This module contains database facilities used by cvs2svn."""
 
 
-import cPickle
+import pickle
 
 from cvs2svn_lib.common import DB_OPEN_READ
 from cvs2svn_lib.common import DB_OPEN_WRITE
@@ -71,10 +71,10 @@ class IndexedDatabase:
     if self.mode == DB_OPEN_NEW:
       assert serializer is not None
       self.serializer = serializer
-      cPickle.dump(self.serializer, self.f, -1)
+      pickle.dump(self.serializer, self.f, -1)
     else:
       # Read the memo from the first pickle:
-      self.serializer = cPickle.load(self.f)
+      self.serializer = pickle.load(self.f)
 
     # Seek to the end of the file, and record that position:
     self.f.seek(0, 2)
@@ -104,10 +104,10 @@ class IndexedDatabase:
     return self.serializer.loadf(self.f)
 
   def iterkeys(self):
-    return self.index_table.iterkeys()
+    return iter(list(self.index_table.keys()))
 
   def itervalues(self):
-    for offset in self.index_table.itervalues():
+    for offset in list(self.index_table.values()):
       yield self._fetch(offset)
 
   def __getitem__(self, index):

@@ -387,7 +387,7 @@ class HeuristicPreferredParentRule(StrategyRule):
 
     best_count = -1
     best_symbol = None
-    for (symbol, count) in stats.possible_parents.items():
+    for (symbol, count) in list(stats.possible_parents.items()):
       if count > best_count or (count == best_count and symbol < best_symbol):
         best_count = count
         best_symbol = symbol
@@ -518,13 +518,13 @@ class ManualSymbolRule(StrategyRule):
     to be determined from its name.  If none of its possible parents
     has name PARENT_LOD_NAME, raise a SymbolPlanError."""
 
-    for pp in stats.possible_parents.keys():
+    for pp in list(stats.possible_parents.keys()):
       if isinstance(pp, Trunk):
         pass
       elif pp.name == parent_lod_name:
         return pp
     else:
-      parent_counts = stats.possible_parents.items()
+      parent_counts = list(stats.possible_parents.items())
       parent_counts.sort(lambda a,b: - cmp(a[1], b[1]))
       lines = [
           '%s is not a valid parent for %s;'

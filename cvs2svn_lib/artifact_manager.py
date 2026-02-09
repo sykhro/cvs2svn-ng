@@ -238,7 +238,7 @@ class ArtifactManager:
 
     unclean_artifacts = [
         str(artifact)
-        for artifact in self._artifacts.values()
+        for artifact in list(self._artifacts.values())
         if artifact._passes_needed]
 
     if unclean_artifacts:

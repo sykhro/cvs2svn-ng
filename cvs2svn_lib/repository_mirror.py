@@ -235,7 +235,7 @@ class MirrorDirectory(object):
       else:
         return '%s -> %x' % (key, value,)
 
-    items = self._entries.items()
+    items = list(self._entries.items())
     items.sort()
     return '{%s}' % (', '.join([format_item(*item) for item in items]),)
 
@@ -388,7 +388,7 @@ class _WritableMirrorDirectoryMixin:
 
     self.__class__ = DeletedCurrentMirrorDirectory
 
-    for (cvs_path, id) in self._entries.iteritems():
+    for (cvs_path, id) in list(self._entries.items()):
       if id in self.repo._new_nodes:
         node = self[cvs_path]
         if isinstance(node, _WritableMirrorDirectoryMixin):
@@ -627,7 +627,7 @@ class _NodeDatabase(object):
     # The number of directories in the repository:
     num_dirs = len([
         cvs_path
-        for cvs_path in self.cvs_path_db.itervalues()
+        for cvs_path in list(self.cvs_path_db.values())
         if isinstance(cvs_path, CVSDirectory)
         ])
 
@@ -645,7 +645,7 @@ class _NodeDatabase(object):
   def _dump(self, node):
     return [
         (cvs_path.id, value)
-        for (cvs_path, value) in node.iteritems()
+        for (cvs_path, value) in list(node.items())
         ]
 
   def _determine_index(self, id):
@@ -658,7 +658,7 @@ class _NodeDatabase(object):
       items = self._cache[id]
     except KeyError:
       index = self._determine_index(id)
-      for (node_id, items) in self.db[index].items():
+      for (node_id, items) in list(self.db[index].items()):
         self._cache[node_id] = self._load(items)
       items = self._cache[id]
 
@@ -767,7 +767,7 @@ class RepositoryMirror:
     # Copy the new nodes to the _node_db
     self._node_db.write_new_nodes([
         node
-        for node in self._new_nodes.values()
+        for node in list(self._new_nodes.values())
         if not isinstance(node, DeletedCurrentMirrorDirectory)
         ])
 

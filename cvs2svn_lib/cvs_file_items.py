@@ -143,7 +143,7 @@ class CVSFileItems(object):
           self.original_ids[cvs_item.rev] = cvs_item.id
 
   def __getstate__(self):
-    return (self.cvs_file.id, self.values(), self.original_ids,)
+    return (self.cvs_file.id, list(self.values()), self.original_ids,)
 
   def __setstate__(self, state):
     (cvs_file_id, cvs_items, original_ids,) = state
@@ -169,12 +169,12 @@ class CVSFileItems(object):
     del self._cvs_items[id]
 
   def values(self):
-    return self._cvs_items.values()
+    return list(self._cvs_items.values())
 
   def check_link_consistency(self):
     """Check that the CVSItems are linked correctly with each other."""
 
-    for cvs_item in self.values():
+    for cvs_item in list(self.values()):
       try:
         cvs_item.check_links(self)
       except AssertionError:
@@ -927,7 +927,7 @@ class CVSFileItems(object):
   def mutate_symbols(self):
     """Force symbols to be tags/branches based on self.symbol_db."""
 
-    for cvs_item in self.values():
+    for cvs_item in list(self.values()):
       if isinstance(cvs_item, CVSRevision):
         # This CVSRevision may be affected by the mutation of any
         # CVSSymbols that it references, but there is nothing to do
@@ -1103,7 +1103,7 @@ class CVSFileItems(object):
   def record_opened_symbols(self):
     """Set CVSRevision.opened_symbols for the surviving revisions."""
 
-    for cvs_item in self.values():
+    for cvs_item in list(self.values()):
       if isinstance(cvs_item, (CVSRevision, CVSBranch)):
         cvs_item.opened_symbols = []
         for cvs_symbol_opened_id in cvs_item.get_cvs_symbol_ids_opened():
@@ -1120,7 +1120,7 @@ class CVSFileItems(object):
 
     This method must be called after record_opened_symbols()."""
 
-    for cvs_item in self.values():
+    for cvs_item in list(self.values()):
       if isinstance(cvs_item, CVSRevision):
         cvs_item.closed_symbols = []
         for cvs_item_closed_id in cvs_item.get_ids_closed():

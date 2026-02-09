@@ -316,7 +316,7 @@ class TextRecordDatabase:
     self.deferred_deletes = None
 
   def __getstate__(self):
-    return (self.text_records.values(),)
+    return (list(self.text_records.values()),)
 
   def __setstate__(self, state):
     (text_records,) = state
@@ -332,7 +332,7 @@ class TextRecordDatabase:
 
     There must not already be a record with the same id."""
 
-    assert not self.text_records.has_key(text_record.id)
+    assert text_record.id not in self.text_records
 
     self.text_records[text_record.id] = text_record
 
@@ -349,7 +349,7 @@ class TextRecordDatabase:
 
     Do not do anything with the old record."""
 
-    assert self.text_records.has_key(text_record.id)
+    assert text_record.id in self.text_records
     self.text_records[text_record.id] = text_record
 
   def discard(self, *ids):
@@ -383,7 +383,7 @@ class TextRecordDatabase:
       self.deferred_deletes.extend(ids)
 
   def itervalues(self):
-    return self.text_records.itervalues()
+    return iter(list(self.text_records.values()))
 
   def recompute_refcounts(self, cvs_file_items):
     """Recompute the refcounts of the contained TextRecords.
@@ -392,12 +392,12 @@ class TextRecordDatabase:
     cvs2svn."""
 
     # First clear all of the refcounts:
-    for text_record in self.itervalues():
+    for text_record in list(self.values()):
       text_record.refcount = 0
 
     # Now increment the reference count of records that are needed as
     # the source of another record's deltas:
-    for text_record in self.itervalues():
+    for text_record in list(self.values()):
       text_record.increment_dependency_refcounts(self.text_records)
 
     # Now increment the reference count of records that will be needed
@@ -419,7 +419,7 @@ class TextRecordDatabase:
 
     unused = [
         text_record.id
-        for text_record in self.itervalues()
+        for text_record in list(self.values())
         if text_record.refcount == 0
         ]
 
@@ -432,14 +432,14 @@ class TextRecordDatabase:
       logger.warn(
           "%s: internal problem: leftover revisions in the checkout cache:"
           % warning_prefix)
-      for text_record in self.itervalues():
+      for text_record in list(self.values()):
         logger.warn('    %s' % (text_record,))
 
   def __repr__(self):
     """Debugging output of the current contents of the TextRecordDatabase."""
 
     retval = ['TextRecordDatabase:']
-    for text_record in self.itervalues():
+    for text_record in list(self.values()):
       retval.append('    %s' % (text_record,))
     return '\n'.join(retval)
 
@@ -516,7 +516,7 @@ class _Sink(Sink):
         # as the forward delta of our child revision.
         try:
           text = self._rcs_stream.invert_diff(text)
-        except MalformedDeltaException, e:
+        except MalformedDeltaException as e:
           logger.error(
               'Malformed RCS delta in %s, revision %s: %s'
               % (self.cvs_file_items.cvs_file.rcs_path, revision, e)
@@ -685,7 +685,7 @@ class InternalRevisionReader(RevisionReader):
     do so now."""
 
     if cvs_rev.cvs_file not in self._loaded_files:
-      for text_record in self._tree_db[cvs_rev.cvs_file.id].itervalues():
+      for text_record in list(self._tree_db[cvs_rev.cvs_file.id].values()):
         self._text_record_db.add(text_record)
       self._loaded_files.add(cvs_rev.cvs_file)
 
@@ -714,7 +714,8 @@ class InternalRevisionReader(RevisionReader):
 
     try:
       text = self._get_text_record(cvs_rev).checkout(self._text_record_db)
-    except MalformedDeltaException, (msg):
+    except MalformedDeltaException as xxx_todo_changeme:
+      (msg) = xxx_todo_changeme
       raise FatalError(
           'Malformed RCS delta in %s, revision %s: %s'
           % (cvs_rev.cvs_file.rcs_path, cvs_rev.rev, msg)

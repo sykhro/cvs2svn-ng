@@ -64,7 +64,7 @@ class NormalizePathsSymbolTransform(SymbolTransform):
   def transform(self, cvs_file, symbol_name, revision):
     try:
       return normalize_svn_path(symbol_name)
-    except IllegalSVNPathError, e:
+    except IllegalSVNPathError as e:
       raise FatalError('Problem with %s: %s' % (symbol_name, e,))
 
 
@@ -133,9 +133,9 @@ class SymbolMapper(SymbolTransform):
     for (cvs_filename, symbol_name, revision, new_name) in items:
       self[cvs_filename, symbol_name, revision] = new_name
 
-  def __setitem__(self, (cvs_filename, symbol_name, revision), new_name):
+  def __setitem__(self, xxx_todo_changeme, new_name):
     """Set a mapping for a particular file, symbol, and revision."""
-
+    (cvs_filename, symbol_name, revision) = xxx_todo_changeme
     cvs_filename = os.path.normcase(os.path.normpath(cvs_filename))
     key = (cvs_filename, symbol_name, revision)
     if key in self._map:
@@ -178,9 +178,9 @@ class SubtreeSymbolMapper(SymbolTransform):
     for (cvs_path, symbol_name, new_name) in items:
       self[cvs_path, symbol_name] = new_name
 
-  def __setitem__(self, (cvs_path, symbol_name), new_name):
+  def __setitem__(self, xxx_todo_changeme1, new_name):
     """Set a mapping for a particular file and symbol."""
-
+    (cvs_path, symbol_name) = xxx_todo_changeme1
     try:
       symbol_map = self._map[symbol_name]
     except KeyError:

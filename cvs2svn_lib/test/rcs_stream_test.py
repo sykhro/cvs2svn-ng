@@ -97,7 +97,7 @@ class RCSStreamTestCase(unittest.TestCase):
     self.assertEqual(s2.get_text(), new)
 
   def runTest(self):
-    self.assert_(os.path.isfile(self.filename + ',v'))
+    self.assertTrue(os.path.isfile(self.filename + ',v'))
     recorder = RCSRecorder()
 
     f = open(self.filename + ',v', 'rb')

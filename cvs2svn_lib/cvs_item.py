@@ -333,7 +333,7 @@ class CVSRevision(CVSItem):
     properties = self.cvs_file.properties.copy()
     properties.update(self.properties)
 
-    for (k,v) in properties.items():
+    for (k,v) in list(properties.items()):
       if v is None:
         del properties[k]
 

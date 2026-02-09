@@ -54,7 +54,7 @@ if __name__ == '__main__':
   # containing this script is in the path:
   sys.path.insert(0, os.path.dirname(sys.argv[0]))
 
-  from __init__ import parse
+  from .__init__ import parse
 
   if sys.argv[1:]:
     for path in sys.argv[1:]:

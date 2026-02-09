@@ -16,7 +16,7 @@
 
 import sys
 import shutil
-import cPickle
+import pickle
 
 from cvs2svn_lib import config
 from cvs2svn_lib.context import Ctx
@@ -189,13 +189,13 @@ class CleanMetadataPass(Pass):
 
     try:
       metadata.author = self._get_clean_author(metadata.author)
-    except UnicodeError, e:
+    except UnicodeError as e:
       logger.warn('%s: %s' % (warning_prefix, e,))
       self.warnings = True
 
     try:
       metadata.log_msg = self._get_clean_log_msg(metadata.log_msg)
-    except UnicodeError, e:
+    except UnicodeError as e:
       logger.warn('%s: %s' % (warning_prefix, e,))
       self.warnings = True
 
@@ -218,7 +218,7 @@ class CleanMetadataPass(Pass):
     # repeating warnings):
     self._authors = {}
 
-    for id in metadata_db.iterkeys():
+    for id in list(metadata_db.keys()):
       metadata = metadata_db[id]
 
       # Record the original author name because it might be needed for
@@ -312,7 +312,7 @@ class CollateSymbolsPass(Pass):
             )
         )
     self.symbol_info_file.write('      # %s\n' % (stats,))
-    parent_counts = stats.possible_parents.items()
+    parent_counts = list(stats.possible_parents.items())
     if parent_counts:
       self.symbol_info_file.write('      # Possible parents:\n')
       parent_counts.sort(lambda a,b: cmp((b[1], a[0]), (a[1], b[0])))
@@ -357,7 +357,7 @@ class CollateSymbolsPass(Pass):
       for rule in rule_list:
         rules[id(rule)] = rule
 
-    for rule in rules.itervalues():
+    for rule in list(rules.values()):
       rule.start(self.symbol_stats)
 
     retval = {}
@@ -365,17 +365,17 @@ class CollateSymbolsPass(Pass):
     for stats in self.symbol_stats:
       try:
         symbol = self.get_symbol(run_options, stats)
-      except IndeterminateSymbolException, e:
+      except IndeterminateSymbolException as e:
         self.log_symbol_summary(stats, stats.lod)
         mismatches.append(e.stats)
-      except SymbolPlanError, e:
+      except SymbolPlanError as e:
         self.log_symbol_summary(stats, stats.lod)
         errors.append(e)
       else:
         self.log_symbol_summary(stats, symbol)
         retval[stats.lod] = symbol
 
-    for rule in rules.itervalues():
+    for rule in list(rules.values()):
       rule.finish()
 
     if self.symbol_info_file:
@@ -418,11 +418,11 @@ class CollateSymbolsPass(Pass):
     # are disjoint:
     Ctx().output_option.check_symbols(symbol_map)
 
-    for symbol in symbol_map.itervalues():
+    for symbol in list(symbol_map.values()):
       if isinstance(symbol, ExcludedSymbol):
         self.symbol_stats.exclude_symbol(symbol)
 
-    create_symbol_database(symbol_map.values())
+    create_symbol_database(list(symbol_map.values()))
 
     del self.symbol_stats
 
@@ -463,7 +463,7 @@ class FilterSymbolsPass(Pass):
 
     cvs_item_serializer = PrimedPickleSerializer(cvs_item_primer)
     f = open(artifact_manager.get_temp_file(config.ITEM_SERIALIZER), 'wb')
-    cPickle.dump(cvs_item_serializer, f, -1)
+    pickle.dump(cvs_item_serializer, f, -1)
     f.close()
 
     rev_db = NewSortableCVSRevisionDatabase(
@@ -503,7 +503,7 @@ class FilterSymbolsPass(Pass):
 
       # Store whatever is left to the new file and update statistics:
       stats_keeper.record_cvs_file(cvs_file_items.cvs_file)
-      for cvs_item in cvs_file_items.values():
+      for cvs_item in list(cvs_file_items.values()):
         stats_keeper.record_cvs_item(cvs_item)
 
         if isinstance(cvs_item, CVSRevision):
@@ -776,7 +776,7 @@ class InitializeChangesetsPass(Pass):
     Ctx()._symbol_db = SymbolDatabase()
 
     f = open(artifact_manager.get_temp_file(config.ITEM_SERIALIZER), 'rb')
-    self.cvs_item_serializer = cPickle.load(f)
+    self.cvs_item_serializer = pickle.load(f)
     f.close()
 
     changeset_db = ChangesetDatabase(
@@ -854,7 +854,7 @@ class BreakRevisionChangesetCyclesPass(Pass):
         artifact_manager.get_temp_file(config.CHANGESETS_INDEX),
         DB_OPEN_READ)
 
-    changeset_ids = old_changeset_db.keys()
+    changeset_ids = list(old_changeset_db.keys())
 
     for changeset_id in changeset_ids:
       yield old_changeset_db[changeset_id]
@@ -979,7 +979,7 @@ class RevisionTopologicalSortPass(Pass):
     self._register_temp_file_needed(config.CVS_ITEM_TO_CHANGESET_REVBROKEN)
 
   def get_source_changesets(self, changeset_db):
-    changeset_ids = changeset_db.keys()
+    changeset_ids = list(changeset_db.keys())
 
     for changeset_id in changeset_ids:
       yield changeset_db[changeset_id]
@@ -1077,7 +1077,7 @@ class BreakSymbolChangesetCyclesPass(Pass):
         artifact_manager.get_temp_file(config.CHANGESETS_REVSORTED_INDEX),
         DB_OPEN_READ)
 
-    changeset_ids = old_changeset_db.keys()
+    changeset_ids = list(old_changeset_db.keys())
 
     for changeset_id in changeset_ids:
       yield old_changeset_db[changeset_id]
@@ -1205,7 +1205,7 @@ class BreakAllChangesetCyclesPass(Pass):
         artifact_manager.get_temp_file(config.CHANGESETS_SYMBROKEN_INDEX),
         DB_OPEN_READ)
 
-    changeset_ids = old_changeset_db.keys()
+    changeset_ids = list(old_changeset_db.keys())
 
     for changeset_id in changeset_ids:
       yield old_changeset_db[changeset_id]
@@ -1223,7 +1223,7 @@ class BreakAllChangesetCyclesPass(Pass):
     ordinal_limits = {}
     for cvs_branch in changeset.iter_cvs_items():
       max_pred_ordinal = 0
-      min_succ_ordinal = sys.maxint
+      min_succ_ordinal = sys.maxsize
 
       for pred_id in cvs_branch.get_pred_ids():
         pred_ordinal = self.ordinals.get(
@@ -1232,20 +1232,20 @@ class BreakAllChangesetCyclesPass(Pass):
 
       for succ_id in cvs_branch.get_succ_ids():
         succ_ordinal = self.ordinals.get(
-            self.cvs_item_to_changeset_id[succ_id], sys.maxint)
+            self.cvs_item_to_changeset_id[succ_id], sys.maxsize)
         min_succ_ordinal = min(min_succ_ordinal, succ_ordinal)
 
       assert max_pred_ordinal < min_succ_ordinal
       ordinal_limits[cvs_branch.id] = (max_pred_ordinal, min_succ_ordinal,)
 
     # Find the earliest successor ordinal:
-    min_min_succ_ordinal = sys.maxint
-    for (max_pred_ordinal, min_succ_ordinal) in ordinal_limits.values():
+    min_min_succ_ordinal = sys.maxsize
+    for (max_pred_ordinal, min_succ_ordinal) in list(ordinal_limits.values()):
       min_min_succ_ordinal = min(min_min_succ_ordinal, min_succ_ordinal)
 
     early_item_ids = []
     late_item_ids = []
-    for (id, (max_pred_ordinal, min_succ_ordinal)) in ordinal_limits.items():
+    for (id, (max_pred_ordinal, min_succ_ordinal)) in list(ordinal_limits.items()):
       if max_pred_ordinal >= min_min_succ_ordinal:
         late_item_ids.append(id)
       else:
@@ -1475,7 +1475,7 @@ class TopologicalSortPass(Pass):
     self._register_temp_file_needed(config.CVS_ITEM_TO_CHANGESET_ALLBROKEN)
 
   def get_source_changesets(self, changeset_db):
-    for changeset_id in changeset_db.keys():
+    for changeset_id in list(changeset_db.keys()):
       yield changeset_db[changeset_id]
 
   def get_changesets(self):
@@ -1701,7 +1701,7 @@ class IndexSymbolsPass(Pass):
 
     offsets_db = file(
         artifact_manager.get_temp_file(config.SYMBOL_OFFSETS_DB), 'wb')
-    cPickle.dump(offsets, offsets_db, -1)
+    pickle.dump(offsets, offsets_db, -1)
     offsets_db.close()
 
   def run(self, run_options, stats_keeper):

@@ -365,8 +365,8 @@ def parse_log(svn_repos, symbols):
         elif line.startswith('Changed paths:'):
           this_log.absorb_changed_paths(out)
         else:
-          print 'unexpected log output'
-          print "Line: '%s'" % line
+          print('unexpected log output')
+          print("Line: '%s'" % line)
           sys.exit(1)
 
         absorb_message_body(out, int(m.group('lines')), this_log)
@@ -374,12 +374,12 @@ def parse_log(svn_repos, symbols):
       elif len(line) == 0:
         break   # We've reached the end of the log output.
       else:
-        print 'unexpected log output (missing revision line)'
-        print "Line: '%s'" % line
+        print('unexpected log output (missing revision line)')
+        print("Line: '%s'" % line)
         sys.exit(1)
     else:
-      print 'unexpected log output (missing log separator)'
-      print "Line: '%s'" % line
+      print('unexpected log output (missing log separator)')
+      print("Line: '%s'" % line)
       sys.exit(1)
 
   return logs
@@ -614,7 +614,7 @@ class Conversion:
   def find_tag_log(self, tagname):
     """Search LOGS for a log message containing 'TAGNAME' and return the
     log in which it was found."""
-    for i in xrange(len(self.logs), 0, -1):
+    for i in range(len(self.logs), 0, -1):
       if self.logs[i].msg.find("'"+tagname+"'") != -1:
         return self.logs[i]
     raise ValueError("Tag %s not found in logs" % tagname)
@@ -813,9 +813,9 @@ class Cvs2SvnTestFunction(TestCase):
     # docstring on it.
     assert isinstance(func, types.FunctionType)
 
-    name = func.func_name
+    name = func.__name__
 
-    assert func.func_code.co_argcount == 0, \
+    assert func.__code__.co_argcount == 0, \
         '%s must not take any arguments' % name
 
     doc = func.__doc__.strip()
@@ -836,7 +836,7 @@ class Cvs2SvnTestFunction(TestCase):
     self.func = func
 
   def get_function_name(self):
-    return self.func.func_name
+    return self.func.__name__
 
   def get_sandbox_name(self):
     return None
@@ -938,8 +938,8 @@ def show_usage():
   out = run_script(cvs2svn, None)
   if (len(out) > 2 and out[0].find('ERROR:') == 0
       and out[1].find('DBM module')):
-    print 'cvs2svn cannot execute due to lack of proper DBM module.'
-    print 'Exiting without running any further tests.'
+    print('cvs2svn cannot execute due to lack of proper DBM module.')
+    print('Exiting without running any further tests.')
     sys.exit(1)
   if out[0].find('Usage:') < 0:
     raise Failure('Basic cvs2svn invocation failed.')
@@ -1475,7 +1475,7 @@ class NoTrunkPrune(Cvs2SvnTestCase):
 
   def run(self, sbox):
     conv = self.ensure_conversion()
-    for rev in conv.logs.keys():
+    for rev in list(conv.logs.keys()):
       rev_logs = conv.logs[rev]
       if rev_logs.get_path_op('/%(trunk)s') == 'D':
         raise Failure()
@@ -1703,7 +1703,7 @@ class UnicodeTest(Cvs2SvnTestCase):
   def run(self, sbox):
     try:
       # ensure the availability of the "utf_8" encoding:
-      u'a'.encode('utf_8').decode('utf_8')
+      'a'.encode('utf_8').decode('utf_8')
     except LookupError:
       raise svntest.Skip()
 
@@ -2515,8 +2515,8 @@ def revision_reorder_bug():
 def exclude():
   "test that exclude really excludes everything"
   conv = ensure_conversion('main', args=['--exclude=.*'])
-  for log in conv.logs.values():
-    for item in log.changed_paths.keys():
+  for log in list(conv.logs.values()):
+    for item in list(log.changed_paths.keys()):
       if item.startswith('/branches/') or item.startswith('/tags/'):
         raise Failure()
 
@@ -3159,7 +3159,7 @@ def delete_cvsignore():
   wc_tree = conv.get_wc_tree()
   props = props_for_path(wc_tree, 'trunk/proj')
 
-  if props.has_key('svn:ignore'):
+  if 'svn:ignore' in props:
     raise Failure()
 
 

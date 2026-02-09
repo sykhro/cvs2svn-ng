@@ -100,7 +100,7 @@ class RevisionScores:
     # in the range REV2 <= REV < REV3 is equal to SCORE2.
     self._scores_map = {}
 
-    for (source_lod,deltas) in deltas_map.items():
+    for (source_lod,deltas) in list(deltas_map.items()):
       # Sort by revision number:
       deltas.sort()
 
@@ -155,7 +155,7 @@ class RevisionScores:
     best_revnum = SVN_INVALID_REVNUM
     best_score = 0
 
-    source_lods = self._scores_map.keys()
+    source_lods = list(self._scores_map.keys())
     source_lods.sort()
     for source_lod in source_lods:
       for revnum, score in self._scores_map[source_lod]:

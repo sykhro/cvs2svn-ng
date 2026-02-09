@@ -32,7 +32,7 @@ if sys.version_info[0] >= 3:
   from io import StringIO
 else:
   # Python <3.0
-  from cStringIO import StringIO
+  from io import StringIO
 
 import svntest
 from svntest import main, verify, tree, wc
@@ -161,7 +161,7 @@ def guarantee_greek_repository(path, minor_version):
     sys.exit(1)
 
   # make the repos world-writeable, for mod_dav_svn's sake.
-  main.chmod_tree(path, 0666, 0666)
+  main.chmod_tree(path, 0o666, 0o666)
 
 
 def run_and_verify_atomic_ra_revprop_change(message,
@@ -365,7 +365,7 @@ def run_and_verify_svnrdump(dumpfile_content, expected_stdout,
   # Since main.run_svnrdump() uses binary mode, normalize the stderr
   # line endings on Windows ourselves.
   if sys.platform == 'win32':
-    err = map(lambda x : x.replace('\r\n', '\n'), err)
+    err = [x.replace('\r\n', '\n') for x in err]
 
   for index, line in enumerate(err[:]):
     if re.search("warning: W200007", line):
@@ -597,7 +597,7 @@ class LogParser:
       for i in data:
         self.parser.Parse(i)
       self.parser.Parse('', True)
-    except xml.parsers.expat.ExpatError, e:
+    except xml.parsers.expat.ExpatError as e:
       raise verify.SVNUnexpectedStdout('%s\n%s\n' % (e, ''.join(data),))
     return self.entries
 
@@ -959,7 +959,7 @@ def run_and_verify_info(expected_infos, *args):
 
     for actual, expected in zip(actual_infos, expected_infos):
       # compare dicts
-      for key, value in expected.items():
+      for key, value in list(expected.items()):
         assert ':' not in key # caller passed impossible expectations?
         if value is None and key in actual:
           raise main.SVNLineUnequal("Found unexpected key '%s' with value '%s'"
@@ -1783,7 +1783,7 @@ def make_repo_and_wc(sbox, create_wc = True, read_only = False,
     # just make sure the parent folder of our working copy is created
     try:
       os.mkdir(main.general_wc_dir)
-    except OSError, err:
+    except OSError as err:
       if err.errno != errno.EEXIST:
         raise
 

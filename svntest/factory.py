@@ -255,7 +255,7 @@ if sys.version_info[0] >= 3:
   from io import StringIO
 else:
   # Python <3.0
-  from cStringIO import StringIO
+  from io import StringIO
 
 def make(wc_dir, commands, prev_status=None, prev_disk=None, verbose=True):
   """The Factory Invocation Function. This is typically the only one
@@ -375,7 +375,7 @@ class TestFactory:
     except:
       for line in self.lines:
         if line[1] is not None:
-          print(line[1])
+          print((line[1]))
       raise
 
 
@@ -1879,7 +1879,7 @@ def get_quote_style(str):
 def split_remove_empty(str, sep):
   "do a split, then remove empty elements."
   list = str.split(sep)
-  return filter(lambda item: item and len(item) > 0, list)
+  return [item for item in list if item and len(item) > 0]
 
 def str2py(str):
   "returns the string enclosed in quotes, suitable for py scripts."
