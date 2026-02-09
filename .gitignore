@@ -2,6 +2,7 @@
 *.pyc
 *.pyo
 val-tags
+.venv/
 
 # Ignores in the project root:
 /cvs2git-tmp
@@ -9,3 +10,5 @@ val-tags
 /cvs2svn-tmp
 /*.tar.gz
 /svntest
+/svn-test-work
+

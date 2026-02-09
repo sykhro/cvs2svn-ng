@@ -1,16 +1,12 @@
 # Changelog
 
-## Version ?.?.?
+## Version 2.6.0-ng (2026-02-09)
 
-Bugs fixed:
-*
+Ported the codebase to Python 3.
 
-Improvements and output changes:
-*
+---
 
-Miscellaneous:
-*
-
+Versions below here are from the original cvs2svn project
 
 ## Version 2.5.0 (26 November 2017)
 

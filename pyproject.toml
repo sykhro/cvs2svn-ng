@@ -1,0 +1,20 @@
+[project]
+name = "cvs2svn-ng"
+version = "2.6.0"
+description = "Converts CVS repositories to Subversion repositories."
+readme = "README.md"
+dependencies = []
+license = "Apache-style"
+license-files = ["COPYING"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Version Control :: CVS",
+    "Topic :: Software Development :: Version Control :: Subversion",
+]
+
+[project.urls]
+Source = "https://github.com/sykhro/cvs2svn-ng"
+Issues = "https://github.com/sykhro/cvs2svn-ng/issues"

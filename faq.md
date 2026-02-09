@@ -1,9 +1,17 @@
-# cvs2svn FAQ
-
-:warning: cvs2svn is now in maintenance mode and is not actively being
-developed. :warning:
+# cvs2svn-ng FAQ
 
 ## General
+
+### What is cvs2svn-ng?
+
+`cvs2svn-ng` is a fork of cvs2svn, a tool to convert CVS repositories to
+modern version control systems.
+
+### What is the difference between cvs2svn and cvs2svn-ng?
+
+`cvs2svn` is no longer maintained.
+This fork makes no promises, but at the very least makes
+the tool work with Python 3.
 
 ### Does cvs2svn support incremental repository conversion?
 
@@ -25,27 +33,6 @@ converted).
 
 Some conversion tools claim to support incremental conversions from
 CVS, but as far as is known none of them are reliable.
-
-
-## Compatibility
-
-### Does cvs2svn run under Psyco?
-
-No.
-
-Explanation: [Psyco](http://psyco.sourceforge.net/) is a python
-extension that can speed up the execution of Python code by compiling
-parts of it into i386 machine code. Unfortunately, Psyco is known
-_not_ to run cvs2svn correctly (this was last tested with the Psyco
-pre-2.0 development branch). When cvs2svn is run under Psyco it
-crashes in `OutputPass` with an error message that looks something
-like this:
-
-```
-cvs2svn_lib.common.InternalError: ID changed from 2 -> 3 for Trunk, r2
-```
-
-The Psyco team has been informed about the problem.
 
 
 ## How-to
