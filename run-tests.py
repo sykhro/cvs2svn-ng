@@ -236,8 +236,8 @@ class Log:
       self.changed_paths[path_portion] = op_portion
 
   def __lt__(self, other):
-    return (self.revision, self.author, self.date, self.changed_paths, self.msg) < \
-           (other.revision, other.author, other.date, other.changed_paths, other.msg) 
+    return (self.revision, self.author, self.date, sorted(self.changed_paths.items()), self.msg) < \
+           (other.revision, other.author, other.date, sorted(other.changed_paths.items()), other.msg) 
 
   def get_path_op(self, path):
     """Return the operator for the change involving PATH.
@@ -2455,8 +2455,8 @@ def requires_cvs():
       'requires-cvs', args=['--use-cvs', '--default-eol=native'],
       )
 
-  atsign_contents = file(conv.get_wc("trunk", "atsign-add")).read()
-  cl_contents = file(conv.get_wc("trunk", "client_lock.idl")).read()
+  atsign_contents = open(conv.get_wc("trunk", "atsign-add")).read()
+  cl_contents = open(conv.get_wc("trunk", "client_lock.idl")).read()
 
   if atsign_contents[-1:] == "@":
     raise Failure()
@@ -3095,7 +3095,7 @@ def issue_100():
 
   conv = ensure_conversion('issue-100')
   file1 = conv.get_wc('trunk', 'file1.txt')
-  if file(file1).read() != 'file1.txt<1.2>\n':
+  if open(file1).read() != 'file1.txt<1.2>\n':
     raise Failure()
 
 
@@ -3297,7 +3297,7 @@ def requires_internal_co():
   # Unlike in requires_cvs above, issue 29 is not covered.
   conv = ensure_conversion('requires-cvs')
 
-  atsign_contents = file(conv.get_wc("trunk", "atsign-add")).read()
+  atsign_contents = open(conv.get_wc("trunk", "atsign-add")).read()
 
   if atsign_contents[-1:] == "@":
     raise Failure()
@@ -3315,16 +3315,16 @@ def internal_co_keywords():
   conv_cvs = ensure_conversion('internal-co-keywords',
                                args=["--use-cvs", "--keywords-off"])
 
-  ko_ic = file(conv_ic.get_wc('trunk', 'dir', 'ko.txt')).read()
-  ko_cvs = file(conv_cvs.get_wc('trunk', 'dir', 'ko.txt')).read()
-  kk_ic = file(conv_ic.get_wc('trunk', 'dir', 'kk.txt')).read()
-  kk_cvs = file(conv_cvs.get_wc('trunk', 'dir', 'kk.txt')).read()
-  kv_ic = file(conv_ic.get_wc('trunk', 'dir', 'kv.txt')).read()
-  kv_cvs = file(conv_cvs.get_wc('trunk', 'dir', 'kv.txt')).read()
+  ko_ic = open(conv_ic.get_wc('trunk', 'dir', 'ko.txt')).read()
+  ko_cvs = open(conv_cvs.get_wc('trunk', 'dir', 'ko.txt')).read()
+  kk_ic = open(conv_ic.get_wc('trunk', 'dir', 'kk.txt')).read()
+  kk_cvs = open(conv_cvs.get_wc('trunk', 'dir', 'kk.txt')).read()
+  kv_ic = open(conv_ic.get_wc('trunk', 'dir', 'kv.txt')).read()
+  kv_cvs = open(conv_cvs.get_wc('trunk', 'dir', 'kv.txt')).read()
   # Ensure proper "/Attic" expansion of $Source$ keyword in files
   # which are in a deleted state in trunk
-  del_ic = file(conv_ic.get_wc('branches/b', 'dir', 'kv-deleted.txt')).read()
-  del_cvs = file(conv_cvs.get_wc('branches/b', 'dir', 'kv-deleted.txt')).read()
+  del_ic = open(conv_ic.get_wc('branches/b', 'dir', 'kv-deleted.txt')).read()
+  del_cvs = open(conv_cvs.get_wc('branches/b', 'dir', 'kv-deleted.txt')).read()
 
 
   if ko_ic != ko_cvs:
@@ -3644,7 +3644,7 @@ class EOLVariants(Cvs2SvnTestCase):
     expected_text = self.eol_style_strings[self.eol_style].join(
         ['line 1', 'line 2', '\n\n']
         )
-    if not dump_contents.endswith(expected_text):
+    if not dump_contents.endswith(expected_text.encode('utf-8')):
       raise Failure()
 
 

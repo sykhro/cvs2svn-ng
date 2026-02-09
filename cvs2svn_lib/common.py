@@ -90,10 +90,18 @@ class CommandError(FatalError):
 def canonicalize_eol(text, eol):
   """Replace any end-of-line sequences in TEXT with the string EOL."""
 
-  text = text.replace('\r\n', '\n')
-  text = text.replace('\r', '\n')
-  if eol != '\n':
-    text = text.replace('\n', eol)
+  if isinstance(text, bytes):
+    text = text.replace(b'\r\n', b'\n')
+    text = text.replace(b'\r', b'\n')
+    if eol != '\n':
+      if isinstance(eol, str):
+        eol = eol.encode('utf-8')
+      text = text.replace(b'\n', eol)
+  else:
+    text = text.replace('\r\n', '\n')
+    text = text.replace('\r', '\n')
+    if eol != '\n':
+      text = text.replace('\n', eol)
   return text
 
 
