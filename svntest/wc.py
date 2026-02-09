@@ -84,15 +84,15 @@ logger = logging.getLogger()
 # Working revision, last-changed revision, and last author are whitespace
 # only if the item is missing.
 #
-_re_parse_status = re.compile('^([?!MACDRUGXI_~ ][MACDRUG_ ])'
-                              '([L ])'
-                              '([+ ])'
-                              '([SX ])'
-                              '([KOBT ])'
-                              '([C ]) '
-                              '([* ]) +'
-                              '((?P<wc_rev>\d+|-|\?) +(\d|-|\?)+ +(\S+) +)?'
-                              '(?P<path>.+)$')
+_re_parse_status = re.compile(r'^([?!MACDRUGXI_~ ][MACDRUG_ ])'
+                              r'([L ])'
+                              r'([+ ])'
+                              r'([SX ])'
+                              r'([KOBT ])'
+                              r'([C ]) '
+                              r'([* ]) +'
+                              r'((?P<wc_rev>\d+|-|\?) +(\d|-|\?)+ +(\S+) +)?'
+                              r'(?P<path>.+)$')
 
 _re_parse_skipped = re.compile("^Skipped[^']* '(.+)'( --.*)?\n")
 
