@@ -357,13 +357,13 @@ class _Parser:
     self.ts.match(';')
 
     # Convert date into standard UNIX time format (seconds since epoch)
-    date_fields = string.split(date, '.')
+    date_fields = date.split('.')
     # According to rcsfile(5): the year "contains just the last two
     # digits of the year for years from 1900 through 1999, and all the
     # digits of years thereafter".
     if len(date_fields[0]) == 2:
       date_fields[0] = '19' + date_fields[0]
-    date_fields = list(map(string.atoi, date_fields))
+    date_fields = list(map(int, date_fields))
     EPOCH = 1970
     if date_fields[0] < EPOCH:
       raise ValueError('invalid year for revision %s' % (revision,))

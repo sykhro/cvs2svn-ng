@@ -135,8 +135,9 @@ wc_passwd = 'rayjandom'
 # scenarios
 wc_author2 = 'jconstant' # use the same password as wc_author
 
-# Set C locale for command line programs
-os.environ['LC_ALL'] = 'C'
+# Set C.UTF-8 locale for command line programs (C locale with UTF-8 encoding
+# so that non-ASCII property values are preserved in svn output)
+os.environ['LC_ALL'] = 'C.UTF-8'
 
 ######################################################################
 # The locations of the svn, svnadmin and svnlook binaries, relative to
@@ -371,10 +372,12 @@ def _quote_arg(arg):
     # Quoting suitable for most Unix shells.
     return "'" + arg.replace("'", "'\\''") + "'"
 
-def open_pipe(command, bufsize=-1, stdin=None, stdout=None, stderr=None):
+def open_pipe(command, bufsize=-1, stdin=None, stdout=None, stderr=None,
+              binary_mode=False):
   """Opens a subprocess.Popen pipe to COMMAND using STDIN,
   STDOUT, and STDERR.  BUFSIZE is passed to subprocess.Popen's
-  argument of the same name.
+  argument of the same name.  If BINARY_MODE is False, the pipe
+  uses UTF-8 text mode.
 
   Returns (infile, outfile, errfile, waiter); waiter
   should be passed to wait_on_pipe."""
@@ -394,12 +397,17 @@ def open_pipe(command, bufsize=-1, stdin=None, stdout=None, stderr=None):
   if not stderr:
     stderr = subprocess.PIPE
 
-  p = subprocess.Popen(command,
-                       bufsize,
-                       stdin=stdin,
-                       stdout=stdout,
-                       stderr=stderr,
-                       close_fds=not windows)
+  kwargs = dict(
+      stdin=stdin,
+      stdout=stdout,
+      stderr=stderr,
+      close_fds=not windows,
+  )
+  if not binary_mode:
+    kwargs['encoding'] = 'utf-8'
+    kwargs['errors'] = 'surrogateescape'
+
+  p = subprocess.Popen(command, bufsize, **kwargs)
   return p.stdin, p.stdout, p.stderr, (p, command_string)
 
 def wait_on_pipe(waiter, binary_mode, stdin=None):
@@ -463,7 +471,8 @@ def spawn_process(command, bufsize=-1, binary_mode=0, stdin_lines=None,
     logger.info('CMD: %s %s' % (os.path.basename(command),
                                   ' '.join([_quote_arg(x) for x in varargs])))
 
-  infile, outfile, errfile, kid = open_pipe([command] + list(varargs), bufsize)
+  infile, outfile, errfile, kid = open_pipe(
+      [command] + list(varargs), bufsize, binary_mode=binary_mode)
 
   if stdin_lines:
     for x in stdin_lines:
@@ -494,11 +503,14 @@ def run_command_stdin(command, error_expected, bufsize=-1, binary_mode=0,
 
   start = time.time()
 
-  exit_code, stdout_lines, stderr_lines = spawn_process(command,
-                                                        bufsize,
-                                                        binary_mode,
-                                                        stdin_lines,
-                                                        *varargs)
+  exit_code, stdout_lines, stderr_lines = spawn_process(
+      command,
+      bufsize,
+      binary_mode,
+      stdin_lines,
+      *varargs
+  )
+
 
   def _line_contains_repos_diskpath(line):
     # ### Note: this assumes that either svn-test-work isn't a symlink, 
@@ -1090,7 +1102,7 @@ def merge_notify_line(revstart=None, revend=None, same_URL=True,
   merge operation on revisions REVSTART through REVEND.  Omit both
   REVSTART and REVEND for the case where the left and right sides of
   the merge are from different URLs."""
-  from_foreign_phrase = foreign and "\(from foreign repository\) " or ""
+  from_foreign_phrase = foreign and r"\(from foreign repository\) " or ""
   if target:
     target_re = re.escape(target)
   else:

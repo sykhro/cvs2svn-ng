@@ -733,7 +733,7 @@ class _FileDataCollector(Sink):
     creation order.)"""
 
     for rev_data in list(self._rev_data.values()):
-      rev_data.branches_data.sort(lambda a, b: - cmp(a.id, b.id))
+      rev_data.branches_data.sort(key=lambda a: a.id, reverse=True)
 
   def _resolve_tag_dependencies(self):
     """Resolve dependencies involving tags."""
@@ -1043,7 +1043,7 @@ class _ProjectDataCollector:
     logger.normal(cvs_file.rcs_path)
     fdc = _FileDataCollector(self, cvs_file)
     try:
-      f = open(cvs_file.rcs_path, 'rb')
+      f = open(cvs_file.rcs_path, 'r', encoding='latin-1', errors='surrogateescape')
       try:
         parse(f, fdc)
       finally:

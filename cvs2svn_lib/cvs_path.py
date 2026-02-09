@@ -159,13 +159,16 @@ class CVSPath(object):
         *self.get_path_components(rcs=True)
         )
 
-  def __eq__(a, b):
+  def __eq__(self, other):
     """Compare two CVSPath instances for equality.
 
     This method is supplied to avoid using __cmp__() for comparing for
     equality."""
 
-    return a is b
+    return self is other
+
+  def __hash__(self):
+    return self.id
 
   def sort_key(self):
     """Return the key that should be used for sorting CVSPath instances.

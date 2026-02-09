@@ -117,9 +117,10 @@ class Project(object):
   def __eq__(self, other):
     return self.id == other.id
 
-  def __cmp__(self, other):
-    return cmp(self.cvs_module, other.cvs_module) \
-           or cmp(self.id, other.id)
+  def __lt__(self, other):
+    if self.cvs_module != other.cvs_module:
+      return self.cvs_module < other.cvs_module
+    return self.id < other.id
 
   def __hash__(self):
     return self.id

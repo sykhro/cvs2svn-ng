@@ -213,25 +213,25 @@ class State:
     WARNING: any StateItem that does not have contents (.contents is None)
     is assumed to be a directory.
     """
-    if not os.path.exists(target_dir):
-      os.makedirs(target_dir)
+    os.makedirs(target_dir, exist_ok=True)
 
-    for path, item in list(self.desc.items()):
-      fullpath = os.path.join(target_dir, path)
-      if item.contents is None:
-        # a directory
-        if not os.path.exists(fullpath):
-          os.makedirs(fullpath)
-      else:
-        # a file
+    for path, item in self.desc.items():
+        fullpath = os.path.join(target_dir, path)
 
-        # ensure its directory exists
-        dirpath = os.path.dirname(fullpath)
-        if not os.path.exists(dirpath):
-          os.makedirs(dirpath)
+        if item.contents is None:
+            # directory
+            os.makedirs(fullpath, exist_ok=True)
+        else:
+            # file
+            os.makedirs(os.path.dirname(fullpath), exist_ok=True)
 
-        # write out the file contents now
-        open(fullpath, 'wb').write(item.contents)
+            data = item.contents
+            if isinstance(data, str):
+                data = data.encode("utf-8")
+
+            with open(fullpath, "wb") as f:
+                f.write(data)
+
 
   def normalize(self):
     """Return a "normalized" version of self.
@@ -498,7 +498,7 @@ class State:
 
     desc = { }
     for line in lines:
-      if line.startswith('DBG:') or line.startswith('Transmitting'):
+      if line.startswith('DBG:') or line.startswith('Transmitting') or line.startswith('Committing transaction...'):
         continue
 
       match = _re_parse_commit_ext.search(line)

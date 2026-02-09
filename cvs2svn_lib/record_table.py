@@ -50,7 +50,7 @@ class Packer(object):
   def __init__(self, record_len, empty_value=None):
     self.record_len = record_len
     if empty_value is None:
-      self.empty_value = '\0' * self.record_len
+      self.empty_value = b'\0' * self.record_len
     else:
       assert type(empty_value) is bytes
       assert len(empty_value) == self.record_len
@@ -108,7 +108,7 @@ class FileOffsetPacker(Packer):
   # ...but then truncate to 5 bytes.
   INDEX_FORMAT_LEN = 5
 
-  PAD = '\0' * (struct.calcsize(INDEX_FORMAT) - INDEX_FORMAT_LEN)
+  PAD = b'\0' * (struct.calcsize(INDEX_FORMAT) - INDEX_FORMAT_LEN)
 
   def __init__(self):
     Packer.__init__(self, self.INDEX_FORMAT_LEN)
@@ -192,6 +192,9 @@ class AbstractRecordTable:
     # Check that the value was set (otherwise raise KeyError):
     self[i]
     self._set_packed_record(i, self.packer.empty_value)
+
+  def keys(self):
+    return list(self.iterkeys())
 
   def iterkeys(self):
     """Yield the keys in the map in key order."""
@@ -323,7 +326,7 @@ class MmapRecordTable(AbstractRecordTable):
     AbstractRecordTable.__init__(self, filename, mode, packer)
     if self.mode == DB_OPEN_NEW:
       self.python_file = open(self.filename, 'wb+')
-      self.python_file.write('\0' * self.GROWTH_INCREMENT)
+      self.python_file.write(b'\0' * self.GROWTH_INCREMENT)
       self.python_file.flush()
       self._filesize = self.GROWTH_INCREMENT
       self.f = mmap.mmap(

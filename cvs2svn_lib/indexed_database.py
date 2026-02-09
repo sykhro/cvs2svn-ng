@@ -103,6 +103,9 @@ class IndexedDatabase:
 
     return self.serializer.loadf(self.f)
 
+  def keys(self):
+    return self.index_table.keys()
+
   def iterkeys(self):
     return iter(list(self.index_table.keys()))
 

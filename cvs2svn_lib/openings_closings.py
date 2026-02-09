@@ -135,7 +135,7 @@ class SymbolingsReader:
         'r')
     # The offsets_db is really small, and we need to read and write
     # from it a fair bit, so suck it into memory
-    offsets_db = file(
+    offsets_db = open(
         artifact_manager.get_temp_file(config.SYMBOL_OFFSETS_DB), 'rb')
     # A map from symbol_id to offset.  The values of this map are
     # incremented as the openings and closings for a symbol are

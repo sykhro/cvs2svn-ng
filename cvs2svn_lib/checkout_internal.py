@@ -101,6 +101,11 @@ from cvs2svn_lib.rcsparser import Sink
 from cvs2svn_lib.rcsparser import parse
 
 
+class UndeletableIndexedDatabase(IndexedDatabase):
+  def __delitem__(self, id):
+    pass
+
+
 class TextRecord(object):
   """Bookkeeping data for the text of a single CVSRevision."""
 
@@ -385,6 +390,9 @@ class TextRecordDatabase:
   def itervalues(self):
     return iter(list(self.text_records.values()))
 
+  def values(self):
+    return list(self.text_records.values())
+
   def recompute_refcounts(self, cvs_file_items):
     """Recompute the refcounts of the contained TextRecords.
 
@@ -607,7 +615,7 @@ class InternalRevisionCollector(RevisionCollector):
     # A map from cvs_rev_id to TextRecord instance:
     self.text_record_db = TextRecordDatabase(self._delta_db, NullDatabase())
 
-    f = open(cvs_file_items.cvs_file.rcs_path, 'rb')
+    f = open(cvs_file_items.cvs_file.rcs_path, 'r', encoding='latin-1', errors='surrogateescape')
     try:
       parse(f, _Sink(self, cvs_file_items))
     finally:
@@ -651,12 +659,11 @@ class InternalRevisionReader(RevisionReader):
         )
 
   def start(self):
-    self._delta_db = IndexedDatabase(
+    self._delta_db = UndeletableIndexedDatabase(
         artifact_manager.get_temp_file(config.RCS_DELTAS_STORE),
         artifact_manager.get_temp_file(config.RCS_DELTAS_INDEX_TABLE),
         DB_OPEN_READ,
         )
-    self._delta_db.__delitem__ = lambda id: None
     self._tree_db = IndexedDatabase(
         artifact_manager.get_temp_file(config.RCS_TREES_STORE),
         artifact_manager.get_temp_file(config.RCS_TREES_INDEX_TABLE),

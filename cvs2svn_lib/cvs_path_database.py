@@ -66,6 +66,9 @@ class CVSPathDatabase:
 
     self._cvs_paths[cvs_path.id] = cvs_path
 
+  def values(self):
+    return list(self._cvs_paths.values())
+
   def itervalues(self):
     return iter(list(self._cvs_paths.values()))
 

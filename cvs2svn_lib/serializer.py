@@ -83,40 +83,50 @@ class PrimedPickleSerializer(Serializer):
     which can be an arbitrary object (e.g., a list of objects that are
     expected to occur frequently in the objects to be serialized)."""
 
-    f = io.StringIO()
-    pickler = pickle.Pickler(f, -1)
+    # Use pure Python implementation if available to allow memo manipulation
+    try:
+        Pickler = pickle._Pickler
+        Unpickler = pickle._Unpickler
+    except AttributeError:
+        Pickler = pickle.Pickler
+        Unpickler = pickle.Unpickler
+
+    f = io.BytesIO()
+    pickler = Pickler(f, -1)
     pickler.dump(primer)
     self.pickler_memo = pickler.memo
+    self.Pickler = Pickler
 
-    unpickler = pickle.Unpickler(io.StringIO(f.getvalue()))
+    unpickler = Unpickler(io.BytesIO(f.getvalue()))
     unpickler.load()
     self.unpickler_memo = unpickler.memo
+    self.Unpickler = Unpickler
 
   def dumpf(self, f, object):
     """Serialize OBJECT to file-like object F."""
 
-    pickler = pickle.Pickler(f, -1)
+    pickler = self.Pickler(f, -1)
     pickler.memo = self.pickler_memo.copy()
     pickler.dump(object)
 
   def dumps(self, object):
     """Return a string containing OBJECT in serialized form."""
 
-    f = io.StringIO()
+    f = io.BytesIO()
     self.dumpf(f, object)
     return f.getvalue()
 
   def loadf(self, f):
     """Return the next object deserialized from file-like object F."""
 
-    unpickler = pickle.Unpickler(f)
+    unpickler = self.Unpickler(f)
     unpickler.memo = self.unpickler_memo.copy()
     return unpickler.load()
 
   def loads(self, s):
     """Return the object deserialized from string S."""
 
-    return self.loadf(io.StringIO(s))
+    return self.loadf(io.BytesIO(s))
 
 
 class CompressingSerializer(Serializer):

@@ -1533,7 +1533,7 @@ class TopologicalSortPass(Pass):
         'w')
 
     for (changeset, timestamp) in self.get_changesets():
-      sorted_changesets.write('%x %08x\n' % (changeset.id, timestamp,))
+      sorted_changesets.write('%x %08x\n' % (changeset.id, int(timestamp),))
 
     sorted_changesets.close()
 
@@ -1575,7 +1575,7 @@ class CreateRevsPass(Pass):
         artifact_manager.get_temp_file(config.CHANGESETS_ALLBROKEN_INDEX),
         DB_OPEN_READ)
 
-    for line in file(
+    for line in open(
             artifact_manager.get_temp_file(
                 config.CHANGESETS_SORTED_DATAFILE)):
       [changeset_id, timestamp] = [int(s, 16) for s in line.strip().split()]
@@ -1647,7 +1647,7 @@ class SortSymbolOpeningsClosingsPass(Pass):
     logger.quiet("Sorting symbolic name source revisions...")
 
     def sort_key(line):
-      line = line.split(' ', 2)
+      line = line.split(b' ', 2)
       return (int(line[0], 16), int(line[1]), line[2],)
 
     sort_file(
@@ -1699,7 +1699,7 @@ class IndexSymbolsPass(Pass):
 
     f.close()
 
-    offsets_db = file(
+    offsets_db = open(
         artifact_manager.get_temp_file(config.SYMBOL_OFFSETS_DB), 'wb')
     pickle.dump(offsets, offsets_db, -1)
     offsets_db.close()

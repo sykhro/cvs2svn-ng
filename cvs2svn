@@ -48,7 +48,7 @@ except AttributeError:
   sys.stderr.write(version_advice)
   sys.exit(1)
 
-if not ((2,4) <= version < (3,0)):
+if not ((2,4) <= version):
   sys.stderr.write(
       version_error + ' version %d.%d.%d.\n'
       % (version[0], version[1], version[2],)
@@ -59,13 +59,17 @@ if not ((2,4) <= version < (3,0)):
 
 import os
 
+import cvs2svn_lib
+print("DEBUG: cvs2svn_lib file:", cvs2svn_lib.__file__)
+print("DEBUG: sys.path:", sys.path)
+
 from cvs2svn_lib.common import FatalException
 from cvs2svn_lib.main import svn_main
 
 
 try:
   svn_main(os.path.basename(sys.argv[0]), sys.argv[1:])
-except FatalException, e:
+except FatalException as e:
   sys.stderr.write(str(e) + '\n')
   sys.exit(1)
 

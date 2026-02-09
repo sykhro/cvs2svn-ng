@@ -358,6 +358,8 @@ class ChangesetGraph(object):
       # This might raise StopIteration, but that indicates that the
       # graph has been fully consumed, so we just let the exception
       # escape.
+      if not self.nodes:
+        return
       start_node_id = next(iter(list(self.nodes.keys())))
 
       cycle = self.find_cycle(start_node_id)

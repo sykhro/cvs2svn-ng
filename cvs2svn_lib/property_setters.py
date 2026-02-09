@@ -122,7 +122,7 @@ class MimeMapper(FilePropertySetter):
       logger.error('Should specify MIME types file or dict.\n')
 
     if mime_types_file is not None:
-      for line in file(mime_types_file):
+      for line in open(mime_types_file):
         if line.startswith("#"):
           continue
 

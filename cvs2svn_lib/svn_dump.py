@@ -97,7 +97,7 @@ class DumpstreamDelegate(SVNRepositoryDelegate):
     repository will be created with one anyway, we don't specify a
     UUID in the dumpfile."""
 
-    self._dumpfile.write('SVN-fs-dump-format-version: 2\n\n')
+    self._dumpfile.write(b'SVN-fs-dump-format-version: 2\n\n')
 
   @staticmethod
   def _string_for_props(properties):
@@ -105,18 +105,23 @@ class DumpstreamDelegate(SVNRepositoryDelegate):
 
     prop_strings = []
     for (k, v) in sorted(properties.items()):
-      if k.startswith('_'):
+      if isinstance(k, str):
+        k = k.encode('utf8')
+      if isinstance(v, str):
+        v = v.encode('utf8')
+
+      if k.startswith(b'_'):
         # Such properties are for internal use only.
         pass
       elif v is None:
         # None indicates that the property should be left unset.
         pass
       else:
-        prop_strings.append('K %d\n%s\nV %d\n%s\n' % (len(k), k, len(v), v))
+        prop_strings.append(b'K %d\n%s\nV %d\n%s\n' % (len(k), k, len(v), v))
 
-    prop_strings.append('PROPS-END\n')
+    prop_strings.append(b'PROPS-END\n')
 
-    return ''.join(prop_strings)
+    return b''.join(prop_strings)
 
   def start_commit(self, revnum, revprops):
     """Emit the start of SVN_COMMIT (an SVNCommit)."""
@@ -156,13 +161,14 @@ class DumpstreamDelegate(SVNRepositoryDelegate):
     total_len = len(all_prop_strings)
 
     # Print the revision header and revprops
+    # Print the revision header and revprops
     self._dumpfile.write(
-        'Revision-number: %d\n'
-        'Prop-content-length: %d\n'
-        'Content-length: %d\n'
-        '\n'
-        '%s'
-        '\n'
+        b'Revision-number: %d\n'
+        b'Prop-content-length: %d\n'
+        b'Content-length: %d\n'
+        b'\n'
+        b'%s'
+        b'\n'
         % (revnum, total_len, total_len, all_prop_strings)
         )
 
@@ -173,11 +179,11 @@ class DumpstreamDelegate(SVNRepositoryDelegate):
     """Emit the creation of directory PATH."""
 
     self._dumpfile.write(
-        "Node-path: %s\n"
-        "Node-kind: dir\n"
-        "Node-action: add\n"
-        "\n"
-        "\n"
+        b"Node-path: %s\n"
+        b"Node-kind: dir\n"
+        b"Node-action: add\n"
+        b"\n"
+        b"\n"
         % utf8_path(path)
         )
 
@@ -256,54 +262,63 @@ class DumpstreamDelegate(SVNRepositoryDelegate):
     svn_props = cvs_rev.get_properties()
     if cvs_rev.properties_changed:
       prop_contents = self._string_for_props(svn_props)
-      props_header = 'Prop-content-length: %d\n' % len(prop_contents)
+      props_header = b'Prop-content-length: %d\n' % len(prop_contents)
     else:
-      prop_contents = ''
-      props_header = ''
+      prop_contents = b''
+      props_header = b''
 
     data = self._revision_reader.get_content(cvs_rev)
 
     # treat .cvsignore as a directory property
     dir_path, basename = path_split(cvs_rev.get_svn_path())
     if basename == '.cvsignore':
+      ignore_data = data
+      if isinstance(ignore_data, bytes):
+        ignore_data = ignore_data.decode('latin-1', 'surrogateescape')
+
       ignore_contents = self._string_for_props({
-          'svn:ignore' : ''.join(
-            (s + '\n') for s in generate_ignores(cvs_rev.get_svn_path(), data)
+          'svn:ignore' : b''.join(
+            (s + b'\n') for s in generate_ignores(cvs_rev.get_svn_path(), ignore_data)
             )
           })
       ignore_len = len(ignore_contents)
 
       # write headers, then props
       self._dumpfile.write(
-          'Node-path: %s\n'
-          'Node-kind: dir\n'
-          'Node-action: change\n'
-          'Prop-content-length: %d\n'
-          'Content-length: %d\n'
-          '\n'
-          '%s'
+          b'Node-path: %s\n'
+          b'Node-kind: dir\n'
+          b'Node-action: change\n'
+          b'Prop-content-length: %d\n'
+          b'Content-length: %d\n'
+          b'\n'
+          b'%s'
           % (utf8_path(dir_path),
              ignore_len, ignore_len, ignore_contents)
           )
       if not Ctx().keep_cvsignore:
         return
 
+    if isinstance(data, str):
+      data = data.encode('latin-1', 'surrogateescape')
+
     checksum = md5()
     checksum.update(data)
 
     # The content length is the length of property data, text data,
     # and any metadata around/inside around them:
+    # The content length is the length of property data, text data,
+    # and any metadata around/inside around them:
     self._dumpfile.write(
-        'Node-path: %s\n'
-        'Node-kind: file\n'
-        'Node-action: %s\n'
-        '%s'  # no property header if no props
-        'Text-content-length: %d\n'
-        'Text-content-md5: %s\n'
-        'Content-length: %d\n'
-        '\n' % (
-            utf8_path(cvs_rev.get_svn_path()), op, props_header,
-            len(data), checksum.hexdigest(), len(data) + len(prop_contents),
+        b'Node-path: %s\n'
+        b'Node-kind: file\n'
+        b'Node-action: %s\n'
+        b'%s'  # no property header if no props
+        b'Text-content-length: %d\n'
+        b'Text-content-md5: %s\n'
+        b'Content-length: %d\n'
+        b'\n' % (
+            utf8_path(cvs_rev.get_svn_path()), op.encode('utf8'), props_header,
+            len(data), checksum.hexdigest().encode('utf8'), len(data) + len(prop_contents),
             )
         )
 
@@ -315,7 +330,10 @@ class DumpstreamDelegate(SVNRepositoryDelegate):
     # This record is done (write two newlines -- one to terminate
     # contents that weren't themselves newline-termination, one to
     # provide a blank line for readability.
-    self._dumpfile.write('\n\n')
+    # This record is done (write two newlines -- one to terminate
+    # contents that weren't themselves newline-termination, one to
+    # provide a blank line for readability.
+    self._dumpfile.write(b'\n\n')
 
   def add_path(self, cvs_rev):
     """Emit the addition corresponding to CVS_REV, a CVSRevisionAdd."""
@@ -331,9 +349,9 @@ class DumpstreamDelegate(SVNRepositoryDelegate):
     """Emit the deletion of LOD."""
 
     self._dumpfile.write(
-        'Node-path: %s\n'
-        'Node-action: delete\n'
-        '\n'
+        b'Node-path: %s\n'
+        b'Node-action: delete\n'
+        b'\n'
         % (utf8_path(lod.get_path()),)
         )
     self._basic_directories.remove(lod.get_path())
@@ -343,18 +361,18 @@ class DumpstreamDelegate(SVNRepositoryDelegate):
     if basename == '.cvsignore':
       # When a .cvsignore file is deleted, the directory's svn:ignore
       # property needs to be deleted.
-      ignore_contents = 'PROPS-END\n'
+      ignore_contents = b'PROPS-END\n'
       ignore_len = len(ignore_contents)
 
       # write headers, then props
       self._dumpfile.write(
-          'Node-path: %s\n'
-          'Node-kind: dir\n'
-          'Node-action: change\n'
-          'Prop-content-length: %d\n'
-          'Content-length: %d\n'
-          '\n'
-          '%s'
+          b'Node-path: %s\n'
+          b'Node-kind: dir\n'
+          b'Node-action: change\n'
+          b'Prop-content-length: %d\n'
+          b'Content-length: %d\n'
+          b'\n'
+          b'%s'
           % (utf8_path(dir_path),
              ignore_len, ignore_len, ignore_contents)
           )
@@ -362,9 +380,9 @@ class DumpstreamDelegate(SVNRepositoryDelegate):
         return
 
     self._dumpfile.write(
-        'Node-path: %s\n'
-        'Node-action: delete\n'
-        '\n'
+        b'Node-path: %s\n'
+        b'Node-action: delete\n'
+        b'\n'
         % (utf8_path(lod.get_path(cvs_path.cvs_path)),)
         )
 
@@ -374,12 +392,12 @@ class DumpstreamDelegate(SVNRepositoryDelegate):
     self._register_basic_directory(dest_lod.get_path(), False)
 
     self._dumpfile.write(
-        'Node-path: %s\n'
-        'Node-kind: dir\n'
-        'Node-action: add\n'
-        'Node-copyfrom-rev: %d\n'
-        'Node-copyfrom-path: %s\n'
-        '\n'
+        b'Node-path: %s\n'
+        b'Node-kind: dir\n'
+        b'Node-action: add\n'
+        b'Node-copyfrom-rev: %d\n'
+        b'Node-copyfrom-path: %s\n'
+        b'\n'
         % (utf8_path(dest_lod.get_path()),
            src_revnum, utf8_path(src_lod.get_path()))
         )
@@ -400,15 +418,15 @@ class DumpstreamDelegate(SVNRepositoryDelegate):
       raise InternalError()
 
     self._dumpfile.write(
-        'Node-path: %s\n'
-        'Node-kind: %s\n'
-        'Node-action: add\n'
-        'Node-copyfrom-rev: %d\n'
-        'Node-copyfrom-path: %s\n'
-        '\n'
+        b'Node-path: %s\n'
+        b'Node-kind: %s\n'
+        b'Node-action: add\n'
+        b'Node-copyfrom-rev: %d\n'
+        b'Node-copyfrom-path: %s\n'
+        b'\n'
         % (
             utf8_path(dest_lod.get_path(cvs_path.cvs_path)),
-            node_kind,
+            node_kind.encode('utf8'),
             src_revnum,
             utf8_path(src_lod.get_path(cvs_path.cvs_path))
             )

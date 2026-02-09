@@ -111,7 +111,7 @@ class _TokenStream:
         if buf == '':
           raise RuntimeError('EOF')
         lbuf = len(buf)
-      i = string.find(buf, '@', idx)
+      i = buf.find('@', idx)
       if i == -1:
         chunks.append(buf[idx:])
         idx = lbuf
@@ -134,7 +134,7 @@ class _TokenStream:
       self.buf = buf
       self.idx = i + 1
 
-      return string.join(chunks, '')
+      return ''.join(chunks)
 
 #  _get = get
 #  def get(self):

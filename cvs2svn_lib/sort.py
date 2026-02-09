@@ -103,7 +103,7 @@ def merge_files_onepass(input_filenames, output_filename, key=None):
   if len(input_filenames) == 1:
     shutil.move(input_filenames[0], output_filename)
   else:
-    output_file = file(output_filename, 'wb', BUFSIZE)
+    output_file = open(output_filename, 'wb', BUFSIZE)
     try:
       chunks = []
       try:
@@ -243,7 +243,7 @@ def sort_file(
 
   filenames = []
 
-  input_file = file(input, 'rb', BUFSIZE)
+  input_file = open(input, 'rb', BUFSIZE)
   try:
     try:
       input_iterator = iter(input_file)

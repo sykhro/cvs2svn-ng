@@ -34,9 +34,19 @@ try:
 except ImportError:
   pass
 
-# 2. These DBM modules are not good for cvs2svn.
-import dbm.ndbm
-if dbm.ndbm._defaultmod.__name__ in ['dumbdbm', 'dbm']:
+# Initialize _defaultmod if it is None (Python 3 behavior sometimes)
+import dbm
+if dbm._defaultmod is None:
+    # Try to find a suitable dbm implementation
+    for mod_name in ['dbm.gnu', 'dbm.ndbm', 'dbm.dumb']:
+        try:
+            mod = __import__(mod_name, fromlist=['*'])
+            dbm._defaultmod = mod
+            break
+        except ImportError:
+            continue
+import dbm
+if dbm._defaultmod.__name__ in ['dumbdbm', 'dbm']:
   logger.error(
       '%s: cvs2svn uses the anydbm package, which depends on lower level '
           'dbm\n'
@@ -46,14 +56,14 @@ if dbm.ndbm._defaultmod.__name__ in ['dumbdbm', 'dbm']:
       'dumbdbm or dbm.  See '
           'http://python.org/doc/current/lib/module-anydbm.html\n'
       'for more information.\n'
-      % (error_prefix, dbm.ndbm._defaultmod.__name__,)
+      % (error_prefix, dbm._defaultmod.__name__,)
       )
   sys.exit(1)
 
 # 3. If we are using the old bsddb185 module, then try prefer gdbm instead.
 #    Unfortunately, gdbm appears not to be trouble free, either.
-if hasattr(dbm.ndbm._defaultmod, 'bsddb') \
-    and not hasattr(dbm.ndbm._defaultmod.bsddb, '__version__'):
+if hasattr(dbm._defaultmod, 'bsddb') \
+    and not hasattr(dbm._defaultmod.bsddb, '__version__'):
   try:
     gdbm = __import__('gdbm')
   except ImportError:
@@ -65,7 +75,7 @@ if hasattr(dbm.ndbm._defaultmod, 'bsddb') \
         % (warning_prefix,)
         )
   else:
-    dbm.ndbm._defaultmod = gdbm
+    dbm._defaultmod = gdbm
 
 
 class Database:
@@ -97,12 +107,12 @@ class Database:
     # we know that for bsddb - but *not* anydbm in general - the database
     # consists of one file with the name we specify, rather than several
     # based on that name).
-    if mode == DB_OPEN_NEW and dbm.ndbm._defaultmod.__name__ == 'dbhash':
+    if mode == DB_OPEN_NEW and dbm._defaultmod.__name__ == 'dbhash':
       if os.path.isfile(filename):
         os.unlink(filename)
-      self.db = dbm.ndbm.open(filename, 'c')
+      self.db = dbm.open(filename, 'c')
     else:
-      self.db = dbm.ndbm.open(filename, mode)
+      self.db = dbm.open(filename, mode)
 
     # Import implementations for many mapping interface methods.
     for meth_name in ('__delitem__',

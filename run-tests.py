@@ -52,13 +52,6 @@ except ImportError:
   from md5 import md5
 from difflib import Differ
 
-# Make sure that a supported version of Python is being used:
-if not (0x02040000 <= sys.hexversion < 0x03000000):
-  sys.stderr.write(
-      'error: Python 2, version 2.4 or higher required.\n'
-      )
-  sys.exit(1)
-
 # This script needs to run in the correct directory.  Make sure we're there.
 if not (os.path.exists('cvs2svn') and os.path.exists('test-data')):
   sys.stderr.write("error: I need to be run in the directory containing "
@@ -144,9 +137,12 @@ def run_program(program, error_re, *varargs):
     # No stderr allowed.
     if err:
       log = svntest.main.logger.info
-      log('%s said:' % program)
+      print('%s said:' % program)
       for line in err:
-        log('   ' + line.rstrip())
+        print('   ' + line.rstrip())
+      print('STDOUT:')
+      for line in out:
+        print('   ' + line.rstrip())
       raise RunProgramException()
 
   return out
@@ -333,10 +329,10 @@ def parse_log(svn_repos, symbols):
     for i in range(num_lines):
       log.msg += out.readline()
 
-  log_start_re = re.compile('^r(?P<rev>[0-9]+) \| '
-                            '(?P<author>[^\|]+) \| '
-                            '(?P<date>[^\|]+) '
-                            '\| (?P<lines>[0-9]+) (line|lines)$')
+  log_start_re = re.compile(r'^r(?P<rev>[0-9]+) \| '
+                            r'(?P<author>[^\|]+) \| '
+                            r'(?P<date>[^\|]+) '
+                            r'\| (?P<lines>[0-9]+) (line|lines)$')
 
   log_separator = '-' * 72
 
@@ -451,7 +447,8 @@ def make_conversion_id(
   # a hash of the parameters rather than concatenating the parameters
   # into a string.
   if args:
-    conv_id += "-" + md5('\0'.join(args)).hexdigest()
+    print("DEBUG: hashing args: %r" % (args,))
+    conv_id += "-" + md5('\0'.join(args).encode('utf-8')).hexdigest()
 
   # Some options-file based tests rely on knowing the paths to which
   # the repository should be written, so we handle that option as a
@@ -1603,16 +1600,18 @@ def nonascii_cvsignore():
   # The output seems to be in the C locale, where it looks like this
   # (at least on one test system):
   expected = (
-    'Sp?\\195?\\164tzle\n'
-    'Cr?\\195?\\168meBr?\\195?\\187l?\\195?\\169e\n'
-    'Jam?\\195?\\179nIb?\\195?\\169rico\n'
-    'Am?\\195?\\170ijoas?\\195?\\128Bulh?\\195?\\163oPato\n'
+    'Spätzle\n'
+    'CrèmeBrûlée\n'
+    'JamónIbérico\n'
+    'AmêijoasÀBulhãoPato\n'
     )
 
   conv = ensure_conversion('non-ascii', args=['--encoding=latin1'])
   props = props_for_path(conv.get_wc_tree(), 'trunk/single-files')
 
   if props['svn:ignore'] != expected:
+    print(f"EXPECTED: {expected!r}")
+    print(f"ACTUAL:   {props['svn:ignore']!r}")
     raise Failure()
 
 
@@ -4295,7 +4294,7 @@ test_list = [
 if __name__ == '__main__':
 
   # Configure the environment for reproducable output from svn, etc.
-  os.environ["LC_ALL"] = "C"
+  os.environ["LC_ALL"] = "C.UTF-8"
 
   # Unfortunately, there is no way under Windows to make Subversion
   # think that the local time zone is UTC, so we just work in the

@@ -98,7 +98,7 @@ class RegexpSymbolTransform(SymbolTransform):
   """Transform symbols by using a regexp textual substitution."""
 
   def __init__(self, pattern, replacement):
-    """Create a SymbolTransform that transforms symbols matching PATTERN.
+    r"""Create a SymbolTransform that transforms symbols matching PATTERN.
 
     PATTERN is a regular expression that should match the whole symbol
     name.  REPLACEMENT is the replacement text, which may include

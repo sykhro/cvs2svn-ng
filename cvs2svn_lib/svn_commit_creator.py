@@ -93,7 +93,7 @@ class SVNCommitCreator:
 
     cvs_revs = list(changeset.iter_cvs_items())
     if cvs_revs:
-      cvs_revs.sort(lambda a, b: cmp(a.cvs_file.rcs_path, b.cvs_file.rcs_path))
+      cvs_revs.sort(key=lambda a: a.cvs_file.rcs_path)
       svn_commit = SVNPrimaryCommit(
           cvs_revs, timestamp, self.revnum_generator.gen_id()
           )

@@ -15,6 +15,7 @@
 
 
 import os
+import errno
 
 from cvs2svn_lib.context import Ctx
 from cvs2svn_lib.log import logger
@@ -48,7 +49,11 @@ class TempFile(Artifact):
 
   def cleanup(self):
     logger.verbose("Deleting", self.filename)
-    os.unlink(self.filename)
+    try:
+      os.unlink(self.filename)
+    except OSError as e:
+      if e.errno != errno.ENOENT:
+        raise
 
   def __str__(self):
     return 'Temporary file %r' % (self.filename,)

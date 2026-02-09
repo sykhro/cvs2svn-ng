@@ -1126,11 +1126,18 @@ class RunOptions(object):
 
     Store the run options to SELF."""
 
-    g = {
+    g = {}
+    def my_execfile(fn):
+      with open(fn, 'rb') as f:
+        code = compile(f.read(), fn, 'exec')
+        exec(code, g)
+
+    g.update({
       'ctx' : Ctx(),
       'run_options' : self,
-      }
-    exec(compile(open(options_filename, "rb").read(), options_filename, 'exec'), g)
+      'execfile' : my_execfile,
+      })
+    my_execfile(options_filename)
 
   def usage(self):
     self.parser.print_help()
