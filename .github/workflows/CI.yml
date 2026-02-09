@@ -21,7 +21,7 @@ jobs:
           uses: astral-sh/setup-uv@v7
         - name: Install dependencies
           run: |
-            sudo apt-get install -y subversion cvs mercurial
+            sudo apt-get install -y subversion cvs mercurial rcs
             uv sync
         - name: Run tests
           run: |
