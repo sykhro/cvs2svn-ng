@@ -3,6 +3,7 @@ name = "cvs2svn-ng"
 version = "2.6.0"
 description = "Converts CVS repositories to Subversion repositories."
 readme = "README.md"
+requires-python = ">=3.11"
 dependencies = []
 license = "Apache-style"
 license-files = ["COPYING"]
