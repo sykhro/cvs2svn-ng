@@ -55,7 +55,7 @@ from cvs2svn_lib.rcs_stream import RCSStream
 def read_marks():
   # A map from CVS revision number (e.g., 1.2.3.4) to mark:
   marks = {}
-  for l in sys.stdin:
+  for l in sys.stdin.buffer:
     [rev, mark] = l.strip().split()
     marks[rev] = mark
 
@@ -252,7 +252,7 @@ def main(args):
   blobfile = open(blobfilename, 'w+b')
   while True:
     try:
-      (rcsfile, marks) = pickle.load(sys.stdin)
+      (rcsfile, marks) = pickle.load(sys.stdin.buffer)
     except EOFError:
       break
     f = open(rcsfile, 'rb')

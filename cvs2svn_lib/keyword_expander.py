@@ -49,9 +49,21 @@ class _KeywordExpander:
     self.cvs_rev = cvs_rev
 
   def __call__(self, match):
-    return '$%s: %s $' % (
-        match.group(1), getattr(self, match.group(1).lower())(),
-        )
+    keyword = match.group(1)
+    
+    if isinstance(keyword, bytes):
+      # Bytes mode
+      func_name = keyword.decode('ascii').lower()
+      value = getattr(self, func_name)()
+      if isinstance(value, str):
+        value = value.encode('utf-8')
+      return b'$%s: %s $' % (keyword, value)
+    else:
+      # String mode
+      func_name = keyword.lower()
+      value = getattr(self, func_name)()
+      # value is expected to be str, keyword is str
+      return '$%s: %s $' % (keyword, value)
 
   def author(self):
     return Ctx()._metadata_db[self.cvs_rev.metadata_id].original_author
@@ -102,9 +114,17 @@ class _KeywordExpander:
     return 'Exp'
 
 
-_kws = 'Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State'
-_kw_re = re.compile(r'\$(' + _kws + r'):[^$\n]*\$')
-_kwo_re = re.compile(r'\$(' + _kws + r')(:[^$\n]*)?\$')
+# Define keywords base string
+_kws_base = 'Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State'
+
+# Byte-oriented regexes
+_kws_bytes = _kws_base.encode('ascii')
+_kw_re_bytes = re.compile(rb'\$(' + _kws_bytes + rb'):[^$\n]*\$')
+_kwo_re_bytes = re.compile(rb'\$(' + _kws_bytes + rb')(:[^$\n]*)?\$')
+
+# String-oriented regexes
+_kw_re_str = re.compile(r'\$(' + _kws_base + r'):[^$\n]*\$')
+_kwo_re_str = re.compile(r'\$(' + _kws_base + r')(:[^$\n]*)?\$')
 
 
 def expand_keywords(text, cvs_rev):
@@ -112,7 +132,10 @@ def expand_keywords(text, cvs_rev):
 
   E.g., '$Author$' -> '$Author: jrandom $'."""
 
-  return _kwo_re.sub(_KeywordExpander(cvs_rev), text)
+  if isinstance(text, bytes):
+    return _kwo_re_bytes.sub(_KeywordExpander(cvs_rev), text)
+  else:
+    return _kwo_re_str.sub(_KeywordExpander(cvs_rev), text)
 
 
 def collapse_keywords(text):
@@ -120,6 +143,7 @@ def collapse_keywords(text):
 
   E.g., '$Author: jrandom $' -> '$Author$'."""
 
-  return _kw_re.sub(r'$\1$', text)
-
-
+  if isinstance(text, bytes):
+    return _kw_re_bytes.sub(rb'$\1$', text)
+  else:
+    return _kw_re_str.sub(r'$\1$', text)

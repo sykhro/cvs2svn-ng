@@ -38,8 +38,7 @@ class GitRevisionCollector(RevisionCollector):
     self.revision_reader.start()
     if self.blob_filename is None:
       self.dump_file = open(
-          artifact_manager.get_temp_file(config.GIT_BLOB_DATAFILE), 'wb',
-          )
+          artifact_manager.get_temp_file(config.GIT_BLOB_DATAFILE), 'wb')
     else:
       self.dump_file = open(self.blob_filename, 'wb')
     self._mark_generator = KeyGenerator()
@@ -57,11 +56,11 @@ class GitRevisionCollector(RevisionCollector):
     fulltext = self.revision_reader.get_content(cvs_rev)
 
     mark = self._mark_generator.gen_id()
-    self.dump_file.write('blob\n')
-    self.dump_file.write('mark :%d\n' % (mark,))
-    self.dump_file.write('data %d\n' % (len(fulltext),))
-    self.dump_file.write(fulltext)
-    self.dump_file.write('\n')
+    self.dump_file.write('blob\n'.encode('utf-8'))
+    self.dump_file.write('mark :%d\n'.encode('utf-8') % (mark,))
+    self.dump_file.write('data %d\n'.encode('utf-8') % (len(fulltext),))
+    self.dump_file.write(fulltext.encode('utf-8'))
+    self.dump_file.write('\n'.encode('utf-8'))
     cvs_rev.revision_reader_token = mark
 
   def _process_symbol(self, cvs_symbol, cvs_file_items):
