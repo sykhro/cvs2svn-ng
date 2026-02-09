@@ -60,9 +60,8 @@ class SVNCommitCreator:
           ]
 
     if cvs_revs:
-      cvs_revs.sort(
-          lambda a, b: cmp(a.cvs_file.rcs_path, b.cvs_file.rcs_path)
-          )
+      cvs_revs.sort(key=lambda a: a.cvs_file.rcs_path)
+
       # Generate an SVNCommit for all of our default branch cvs_revs.
       yield SVNPostCommit(
           motivating_revnum, cvs_revs, timestamp,

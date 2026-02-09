@@ -258,7 +258,7 @@ class _Stats:
   def __repr__(self):
     retval = ['%s\n  possible parents:\n' % (self,)]
     parent_counts = list(self.possible_parents.items())
-    parent_counts.sort(lambda a,b: - cmp(a[1], b[1]))
+    parent_counts.sort(key=lambda x: x[1], reverse=True)
     for (symbol, count) in parent_counts:
       if isinstance(symbol, Trunk):
         retval.append('    trunk : %d\n' % count)

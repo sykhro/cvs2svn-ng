@@ -115,9 +115,6 @@ class ExpectedOutput:
   def __str__(self):
     return str(self.output)
 
-  def __cmp__(self, other):
-    raise Exception('badness')
-
   def matches(self, other, except_re=None):
     """Return whether SELF.output matches OTHER (which may be a list
     of newline-terminated lines, or a single string).  Either value
@@ -244,9 +241,6 @@ class UnorderedOutput(ExpectedOutput):
   """Marks unordered output, and performs comparisons."""
 
   is_unordered = True
-
-  def __cmp__(self, other):
-    raise Exception('badness')
 
   def matches_except(self, expected, actual, except_re):
     assert type(actual) == type([]) # ### if this trips: fix it!

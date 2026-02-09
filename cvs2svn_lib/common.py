@@ -20,6 +20,10 @@ import codecs
 from cvs2svn_lib.log import logger
 
 
+def cmp(a, b):
+  return (a > b) - (a < b)
+
+
 # Always use these constants for opening databases.
 DB_OPEN_READ = 'r'
 DB_OPEN_WRITE = 'w'

@@ -49,6 +49,7 @@ CVSItem
 
 
 from cvs2svn_lib.context import Ctx
+from cvs2svn_lib.common import cmp
 
 
 class CVSItem(object):
@@ -66,8 +67,8 @@ class CVSItem(object):
   def __eq__(self, other):
     return self.id == other.id
 
-  def __cmp__(self, other):
-    return cmp(self.id, other.id)
+  def __lt__(self, other):
+    return self.id < other.id
 
   def __hash__(self):
     return self.id

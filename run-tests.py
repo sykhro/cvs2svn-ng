@@ -235,11 +235,9 @@ class Log:
       #   path_portion = m.group(1)
       self.changed_paths[path_portion] = op_portion
 
-  def __cmp__(self, other):
-    return cmp(self.revision, other.revision) or \
-        cmp(self.author, other.author) or cmp(self.date, other.date) or \
-        cmp(self.changed_paths, other.changed_paths) or \
-        cmp(self.msg, other.msg)
+  def __lt__(self, other):
+    return (self.revision, self.author, self.date, self.changed_paths, self.msg) < \
+           (other.revision, other.author, other.date, other.changed_paths, other.msg) 
 
   def get_path_op(self, path):
     """Return the operator for the change involving PATH.

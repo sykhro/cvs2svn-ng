@@ -19,6 +19,7 @@ from cvs2svn_lib.context import Ctx
 from cvs2svn_lib.symbol import Branch
 from cvs2svn_lib.symbol import Tag
 from cvs2svn_lib.time_range import TimeRange
+from cvs2svn_lib.common import cmp
 from cvs2svn_lib.changeset_graph_node import ChangesetGraphNode
 
 
@@ -62,8 +63,19 @@ class Changeset(object):
   def __setstate__(self, state):
     (self.id, self.cvs_item_ids,) = state
 
-  def __cmp__(self, other):
-    raise NotImplementedError()
+  def __lt__(self, other):
+    import sys
+    s_order = getattr(self, '_sort_order', -1)
+    o_order = getattr(other, '_sort_order', -1)
+    sys.stderr.write("DEBUG: LT %r (%d) vs %r (%d)\n" % (type(self), s_order, type(other), o_order))
+    if s_order != o_order:
+      return s_order < o_order
+    s_sym = getattr(self, 'symbol', None)
+    o_sym = getattr(other, 'symbol', None)
+    if s_sym is not None and o_sym is not None:
+      if s_sym != o_sym:
+        return s_sym < o_sym
+    return self.id < other.id
 
   def __str__(self):
     raise NotImplementedError()
@@ -100,10 +112,6 @@ class RevisionChangeset(Changeset):
 
   def create_split_changeset(self, id, cvs_item_ids):
     return RevisionChangeset(id, cvs_item_ids)
-
-  def __cmp__(self, other):
-    return cmp(self._sort_order, other._sort_order) \
-           or cmp(self.id, other.id)
 
   def __str__(self):
     return 'RevisionChangeset<%x>' % (self.id,)
@@ -176,10 +184,6 @@ class OrderedChangeset(Changeset):
     (changeset_state, self.ordinal, self.prev_id, self.next_id,) = state
     Changeset.__setstate__(self, changeset_state)
 
-  def __cmp__(self, other):
-    return cmp(self._sort_order, other._sort_order) \
-           or cmp(self.id, other.id)
-
   def __str__(self):
     return 'OrderedChangeset<%x(%d)>' % (self.id, self.ordinal,)
 
@@ -211,11 +215,6 @@ class SymbolChangeset(Changeset):
           succ_ids.add(changeset_id)
 
     return ChangesetGraphNode(self, TimeRange(), pred_ids, succ_ids)
-
-  def __cmp__(self, other):
-    return cmp(self._sort_order, other._sort_order) \
-           or cmp(self.symbol, other.symbol) \
-           or cmp(self.id, other.id)
 
   def __getstate__(self):
     return (Changeset.__getstate__(self), self.symbol.id,)

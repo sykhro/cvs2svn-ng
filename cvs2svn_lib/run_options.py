@@ -894,7 +894,7 @@ class RunOptions(object):
       return datetime.date.today()
 
   def callback_manpage(self, option, opt_str, value, parser):
-    f = codecs.getwriter('utf_8')(sys.stdout)
+    f = codecs.getwriter('utf_8')(getattr(sys.stdout, 'buffer', sys.stdout))
     writer = ManWriter(parser,
                        section='1',
                        date=self._choose_build_date(),

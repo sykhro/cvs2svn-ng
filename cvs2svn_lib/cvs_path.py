@@ -183,10 +183,17 @@ class CVSPath(object):
         self.get_path_components(rcs=False),
         )
 
-  def __cmp__(a, b):
-    """This method must only be called after ordinal has been set."""
+  def __lt__(self, other):
+    return self.ordinal < other.ordinal
 
-    return cmp(a.ordinal, b.ordinal)
+  def __le__(self, other):
+    return self.ordinal <= other.ordinal
+
+  def __gt__(self, other):
+    return self.ordinal > other.ordinal
+
+  def __ge__(self, other):
+    return self.ordinal >= other.ordinal
 
 
 class CVSDirectory(CVSPath):

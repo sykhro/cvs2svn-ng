@@ -20,6 +20,7 @@ import pickle
 
 from cvs2svn_lib import config
 from cvs2svn_lib.context import Ctx
+from cvs2svn_lib.common import cmp
 from cvs2svn_lib.common import warning_prefix
 from cvs2svn_lib.common import FatalException
 from cvs2svn_lib.common import FatalError
@@ -315,7 +316,7 @@ class CollateSymbolsPass(Pass):
     parent_counts = list(stats.possible_parents.items())
     if parent_counts:
       self.symbol_info_file.write('      # Possible parents:\n')
-      parent_counts.sort(lambda a,b: cmp((b[1], a[0]), (a[1], b[0])))
+      parent_counts.sort(key=lambda x: (-x[1], x[0]))
       for (pp, count) in parent_counts:
         if isinstance(pp, Trunk):
           self.symbol_info_file.write(
@@ -643,13 +644,13 @@ class InitializeChangesetsPass(Pass):
       yield changeset_items
 
   @staticmethod
-  def compare_items(a, b):
-      return (
-          cmp(a.timestamp, b.timestamp)
-          or cmp(a.cvs_file.cvs_path, b.cvs_file.cvs_path)
-          or cmp([int(x) for x in a.rev.split('.')],
-                 [int(x) for x in b.rev.split('.')])
-          or cmp(a.id, b.id))
+  def sort_key_for_item(item):
+    return (
+        item.timestamp,
+        item.cvs_file.cvs_path,
+        [int(x) for x in item.rev.split('.')],
+        item.id,
+    )
 
   def break_internal_dependencies(self, changeset_items):
     """Split up CHANGESET_ITEMS if necessary to break internal dependencies.
@@ -682,7 +683,7 @@ class InitializeChangesetsPass(Pass):
     if dependencies:
       # Sort the changeset_items in a defined order (chronological to the
       # extent that the timestamps are correct and unique).
-      changeset_items.sort(self.compare_items)
+      changeset_items.sort(key=self.sort_key_for_item)
       indexes = {}
       for (i, changeset_item) in enumerate(changeset_items):
         indexes[changeset_item.id] = i

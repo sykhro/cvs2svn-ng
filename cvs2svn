@@ -60,8 +60,6 @@ if not ((2,4) <= version):
 import os
 
 import cvs2svn_lib
-print("DEBUG: cvs2svn_lib file:", cvs2svn_lib.__file__)
-print("DEBUG: sys.path:", sys.path)
 
 from cvs2svn_lib.common import FatalException
 from cvs2svn_lib.main import svn_main
