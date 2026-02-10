@@ -454,7 +454,6 @@ def make_conversion_id(
   # a hash of the parameters rather than concatenating the parameters
   # into a string.
   if args:
-    print("DEBUG: hashing args: %r" % (args,))
     conv_id += "-" + md5('\0'.join(args).encode('utf-8')).hexdigest()
 
   # Some options-file based tests rely on knowing the paths to which
@@ -1617,8 +1616,6 @@ def nonascii_cvsignore():
   props = props_for_path(conv.get_wc_tree(), 'trunk/single-files')
 
   if props['svn:ignore'] != expected:
-    print(f"EXPECTED: {expected!r}")
-    print(f"ACTUAL:   {props['svn:ignore']!r}")
     raise Failure()
 
 
