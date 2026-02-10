@@ -13,6 +13,7 @@
 # ====================================================================
 
 import os
+import sys
 import tempfile
 import errno
 
@@ -109,25 +110,42 @@ def main(progname, run_options, pass_manager):
         pass
 
 
-def svn_main(progname, cmd_args):
+def svn_main(progname=None, cmd_args=None):
+  if progname is None:
+    progname = os.path.basename(sys.argv[0])
+  if cmd_args is None:
+    cmd_args = sys.argv[1:]
   pass_manager = PassManager(passes)
   run_options = SVNRunOptions(progname, cmd_args, pass_manager)
   main(progname, run_options, pass_manager)
 
 
-def git_main(progname, cmd_args):
+def git_main(progname=None, cmd_args=None):
+  if progname is None:
+    progname = os.path.basename(sys.argv[0])
+  if cmd_args is None:
+    cmd_args = sys.argv[1:]
   pass_manager = PassManager(passes)
   run_options = GitRunOptions(progname, cmd_args, pass_manager)
   main(progname, run_options, pass_manager)
 
 
-def bzr_main(progname, cmd_args):
+def bzr_main(progname=None, cmd_args=None):
+  if progname is None:
+    progname = os.path.basename(sys.argv[0])
+  if cmd_args is None:
+    cmd_args = sys.argv[1:]
   pass_manager = PassManager(passes)
   run_options = BzrRunOptions(progname, cmd_args, pass_manager)
   main(progname, run_options, pass_manager)
 
 
-def hg_main(progname, cmd_args):
+def hg_main(progname=None, cmd_args=None):
+  if progname is None:
+    progname = os.path.basename(sys.argv[0])
+  if cmd_args is None:
+    cmd_args = sys.argv[1:]
+
   # Import late so cvs2{svn,git} do not depend on being able to import
   # the Mercurial API.
   from cvs2svn_lib.hg_run_options import HgRunOptions

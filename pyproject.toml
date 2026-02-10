@@ -1,21 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "cvs2svn-ng"
-version = "2.6.0"
+dynamic = ["version"]
 description = "Converts CVS repositories to Subversion repositories."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
-license = "Apache-style"
 license-files = ["COPYING"]
 classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Topic :: Software Development :: Version Control :: CVS",
-    "Topic :: Software Development :: Version Control :: Subversion",
+    "Topic :: Software Development :: Version Control",
 ]
 
 [project.urls]
 Source = "https://github.com/sykhro/cvs2svn-ng"
 Issues = "https://github.com/sykhro/cvs2svn-ng/issues"
+
+[project.scripts]
+cvs2svn = "cvs2svn_lib.main:svn_main"
+cvs2git = "cvs2svn_lib.main:git_main"
+cvs2bzr = "cvs2svn_lib.main:bzr_main"
+cvs2hg = "cvs2svn_lib.main:hg_main"
+
+[tool.hatch.version]
+path = "cvs2svn_lib/version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["cvs2svn_lib", "cvs2svn_rcsparse"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "doc",
+  "contrib",
+  "cvs2*-example.options",
+  "svntest",
+  "test-data",
+  "Makefile",
+]

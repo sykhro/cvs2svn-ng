@@ -53,9 +53,9 @@ except ImportError:
 from difflib import Differ
 
 # This script needs to run in the correct directory.  Make sure we're there.
-if not (os.path.exists('cvs2svn') and os.path.exists('test-data')):
+if not os.path.exists('test-data'):
   sys.stderr.write("error: I need to be run in the directory containing "
-                   "'cvs2svn' and 'test-data'.\n")
+                   "'test-data'.\n")
   sys.exit(1)
 
 # Load the Subversion test framework.
@@ -73,9 +73,9 @@ try:
 except (ImportError, AttributeError):
   have_hg = False
 
-cvs2svn = os.path.abspath('cvs2svn')
-cvs2git = os.path.abspath('cvs2git')
-cvs2hg = os.path.abspath('cvs2hg')
+cvs2svn = os.path.abspath('cvs2svn') if os.path.exists('cvs2svn') else 'cvs2svn'
+cvs2git = os.path.abspath('cvs2git') if os.path.exists('cvs2git') else 'cvs2git'
+cvs2hg = os.path.abspath('cvs2hg') if os.path.exists('cvs2hg') else 'cvs2hg'
 
 # We use the installed svn and svnlook binaries, instead of using
 # svntest.main.run_svn() and svntest.main.run_svnlook(), because the
@@ -160,8 +160,12 @@ def run_script(script, error_re, *varargs):
   match some line of stderr.  If it fails to match, raise
   MissingErrorException."""
 
-  # Use the same python that is running this script
-  return run_program(sys.executable, error_re, script, *varargs)
+  if os.path.isfile(script):
+    # Use the same python that is running this script
+    return run_program(sys.executable, error_re, script, *varargs)
+  else:
+    # Assume it is a command in the path
+    return run_program(script, error_re, *varargs)
   # On Windows, for an unknown reason, the cmd.exe process invoked by
   # os.system('sort ...') in cvs2svn receives invalid stdio handles, if
   # cvs2svn is started as "cvs2svn ...".  "python cvs2svn ..." avoids

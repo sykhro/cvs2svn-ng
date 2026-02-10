@@ -4,5 +4,4 @@ requires-python = ">=3.11"
 
 [[package]]
 name = "cvs2svn-ng"
-version = "2.6.0"
-source = { virtual = "." }
+source = { editable = "." }
