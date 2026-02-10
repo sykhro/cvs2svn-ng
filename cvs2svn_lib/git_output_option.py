@@ -272,11 +272,14 @@ class GitOutputOption(DVCSOutputOption):
     return self._map_author(cvs_author)
 
   def _map_author(self, cvs_author):
+    if isinstance(cvs_author, bytes):
+        cvs_author = cvs_author.decode('utf-8', 'replace')
     return self.author_transforms.get(cvs_author, "%s <>" % (cvs_author,))
 
   @staticmethod
   def _get_log_msg(svn_commit):
-    return svn_commit.get_log_msg()
+    log_msg = svn_commit.get_log_msg()
+    return log_msg
 
   def process_initial_project_commit(self, svn_commit):
     self._mirror.start_commit(svn_commit.revnum)
@@ -309,7 +312,11 @@ class GitOutputOption(DVCSOutputOption):
         ('committer %s %d +0000\n' % (author, svn_commit.date,)).encode('utf-8')
         )
     self.f.write(('data %d\n' % (len(log_msg),)).encode('utf-8'))
-    self.f.write(('%s\n' % (log_msg,)).encode('utf-8'))
+    if isinstance(log_msg, bytes):
+        self.f.write(log_msg)
+    else:
+        self.f.write(log_msg.encode('utf-8'))
+    self.f.write(b'\n')
     for cvs_rev in svn_commit.get_cvs_items():
       self.revision_writer.process_revision(cvs_rev, post_commit=False)
 
@@ -340,7 +347,11 @@ class GitOutputOption(DVCSOutputOption):
         ('committer %s %d +0000\n' % (author, svn_commit.date,)).encode('utf-8')
         )
     self.f.write(('data %d\n' % (len(log_msg),)).encode('utf-8'))
-    self.f.write(('%s\n' % (log_msg,)).encode('utf-8'))
+    if isinstance(log_msg, bytes):
+        self.f.write(log_msg)
+    else:
+        self.f.write(log_msg.encode('utf-8'))
+    self.f.write(b'\n')
     self.f.write(
         ('merge :%d\n'
         % (self._get_source_mark(source_lod, svn_commit.revnum),)).encode('utf-8')
@@ -415,7 +426,11 @@ class GitOutputOption(DVCSOutputOption):
     self.f.write(('mark :%d\n' % (mark,)).encode('utf-8'))
     self.f.write(('committer %s %d +0000\n' % (author, svn_commit.date,)).encode('utf-8'))
     self.f.write(('data %d\n' % (len(log_msg),)).encode('utf-8'))
-    self.f.write(('%s\n' % (log_msg,)).encode('utf-8'))
+    if isinstance(log_msg, bytes):
+        self.f.write(log_msg)
+    else:
+        self.f.write(log_msg.encode('utf-8'))
+    self.f.write(b'\n')
 
     # Only record actual DVCS ancestry for the primary sprout parent,
     # all the rest are effectively cherrypicks.
@@ -528,7 +543,11 @@ class GitOutputOption(DVCSOutputOption):
         self.f.write(('mark :%d\n' % (mark2,)).encode('utf-8'))
         self.f.write(('committer %s %d +0000\n' % (author, svn_commit.date,)).encode('utf-8'))
         self.f.write(('data %d\n' % (len(log_msg),)).encode('utf-8'))
-        self.f.write(('%s\n' % (log_msg,)).encode('utf-8'))
+        if isinstance(log_msg, bytes):
+            self.f.write(log_msg)
+        else:
+            self.f.write(log_msg.encode('utf-8'))
+        self.f.write(b'\n')
 
         self.f.write(
             ('merge :%d\n'
