@@ -18,7 +18,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 WORKDIR /app
 
 # Copy dependency definition to cache dependencies
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 # Copy version file required for dynamic versioning
 COPY cvs2svn_lib/version.py cvs2svn_lib/version.py
 
