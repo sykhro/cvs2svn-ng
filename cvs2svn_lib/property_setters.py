@@ -248,7 +248,10 @@ class AutoPropsPropertySetter(FilePropertySetter):
           % (warning_prefix, configfilename,)
           )
 
-    config.readfp(StringIO(configtext), configfilename)
+    if hasattr(config, 'read_file'):
+      config.read_file(StringIO(configtext), source=configfilename)
+    else:
+      config.readfp(StringIO(configtext), configfilename)
     self.patterns = []
     sections = config.sections()
     sections.sort()
