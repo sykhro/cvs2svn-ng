@@ -64,10 +64,9 @@ class Changeset(object):
     (self.id, self.cvs_item_ids,) = state
 
   def __lt__(self, other):
-    import sys
     s_order = getattr(self, '_sort_order', -1)
     o_order = getattr(other, '_sort_order', -1)
-    sys.stderr.write("DEBUG: LT %r (%d) vs %r (%d)\n" % (type(self), s_order, type(other), o_order))
+
     if s_order != o_order:
       return s_order < o_order
     s_sym = getattr(self, 'symbol', None)
@@ -76,6 +75,12 @@ class Changeset(object):
       if s_sym != o_sym:
         return s_sym < o_sym
     return self.id < other.id
+
+  def __eq__(self, other):
+    return self.id == other.id
+
+  def __hash__(self):
+    return hash(self.id)
 
   def __str__(self):
     raise NotImplementedError()
