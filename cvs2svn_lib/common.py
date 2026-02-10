@@ -348,7 +348,10 @@ class CVSTextDecoder:
     the source encodings and no fallback encoding was specified."""
 
     if isinstance(s, str):
-      return s
+      try:
+        s = s.encode('latin-1')
+      except UnicodeEncodeError:
+        pass
     for (name, decoder) in self.decoders:
       try:
         return decoder(s)[0]

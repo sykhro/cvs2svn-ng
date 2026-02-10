@@ -239,6 +239,15 @@ class Log:
     return (self.revision, self.author, self.date, sorted(self.changed_paths.items()), self.msg) < \
            (other.revision, other.author, other.date, sorted(other.changed_paths.items()), other.msg) 
 
+  def __repr__(self):
+    return "Log(rev=%r, author=%r, date=%r, paths=%r, msg=%r)" % (
+      self.revision, self.author, self.date, sorted(self.changed_paths.items()), self.msg) 
+
+  def __eq__(self, other):
+    if not isinstance(other, Log): return NotImplemented
+    return (self.revision, self.author, self.date, sorted(self.changed_paths.items()), self.msg) == \
+           (other.revision, other.author, other.date, sorted(other.changed_paths.items()), other.msg) 
+
   def get_path_op(self, path):
     """Return the operator for the change involving PATH.
 
