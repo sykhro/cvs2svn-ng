@@ -39,4 +39,10 @@ class TimeRange(object):
       return self.t_max < other.t_max
     return self.t_min < other.t_min
 
+  def __eq__(self, other):
+    return self.t_max == other.t_max and self.t_min == other.t_min
+
+  def __hash__(self):
+    return id(self)
+
 
