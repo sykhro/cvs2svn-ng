@@ -19,6 +19,8 @@ WORKDIR /app
 
 # Copy dependency definition to cache dependencies
 COPY pyproject.toml uv.lock ./
+# Copy version file required for dynamic versioning
+COPY cvs2svn_lib/version.py cvs2svn_lib/version.py
 
 # Install dependencies
 RUN uv sync --frozen
