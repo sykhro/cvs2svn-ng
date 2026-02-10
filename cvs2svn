@@ -58,6 +58,7 @@ if not ((2,4) <= version):
 
 
 import os
+import sys
 
 import cvs2svn_lib
 
