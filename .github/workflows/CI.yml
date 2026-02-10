@@ -26,3 +26,11 @@ jobs:
         - name: Run tests
           run: |
             uv run run-tests.py
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone the repository
+        uses: actions/checkout@v6
+      - name: Build Docker image
+        run: docker build .
