@@ -85,15 +85,13 @@ class RevRecord(object):
 
   def write_blob(self, f, text):
     f.seek(0, 2)
-    length = len(text)
-    f.write('blob\n')
-    f.write('mark :%s\n' % (self.mark,))
-    f.write('data %d\n' % (length,))
+    blob_header = ('blob\nmark :%s\ndata %d\n' % (self.mark, len(text.encode('latin-1', 'surrogateescape')))).encode('ascii')
+    f.write(blob_header)
     offset = f.tell()
-    f.write(text)
-    f.write('\n')
+    f.write(text.encode('latin-1', 'surrogateescape'))
+    f.write(b'\n')
 
-    self.fulltext = (f, offset, length)
+    self.fulltext = (f, offset, len(text.encode('latin-1', 'surrogateescape')))
 
     # This record (with its mark) has now been written, so the mark is
     # no longer needed.  Setting it to None might allow is_needed() to
@@ -103,15 +101,16 @@ class RevRecord(object):
   def write(self, f, text):
     f.seek(0, 2)
     offset = f.tell()
-    length = len(text)
-    f.write(text)
+    encoded_text = text.encode('latin-1', 'surrogateescape')
+    length = len(encoded_text)
+    f.write(encoded_text)
     self.fulltext = (f, offset, length)
 
   def read_fulltext(self):
     assert self.fulltext is not None
     (f, offset, length) = self.fulltext
     f.seek(offset)
-    return f.read(length)
+    return f.read(length).decode('latin-1', 'surrogateescape')
 
   def __str__(self):
     if self.mark is not None:
@@ -255,7 +254,7 @@ def main(args):
       (rcsfile, marks) = pickle.load(sys.stdin.buffer)
     except EOFError:
       break
-    f = open(rcsfile, 'rb')
+    f = open(rcsfile, 'r', encoding='latin-1', errors='surrogateescape', newline='')
     try:
       parse(f, WriteBlobSink(blobfile, marks))
     finally:

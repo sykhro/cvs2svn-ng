@@ -37,7 +37,7 @@ class MalformedDeltaException(Exception):
   pass
 
 
-ed_command_re = re.compile(r'^([ad])(\d+)\s(\d+)\n$')
+ed_command_re = re.compile(r'^([ad])(\d+)\s(\d+)\r?\n$')
 
 
 def generate_edits(diff):

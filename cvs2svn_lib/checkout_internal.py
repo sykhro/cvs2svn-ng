@@ -615,7 +615,7 @@ class InternalRevisionCollector(RevisionCollector):
     # A map from cvs_rev_id to TextRecord instance:
     self.text_record_db = TextRecordDatabase(self._delta_db, NullDatabase())
 
-    f = open(cvs_file_items.cvs_file.rcs_path, 'r', encoding='latin-1', errors='surrogateescape')
+    f = open(cvs_file_items.cvs_file.rcs_path, 'r', encoding='latin-1', errors='surrogateescape', newline='')
     try:
       parse(f, _Sink(self, cvs_file_items))
     finally:

@@ -57,9 +57,12 @@ class GitRevisionCollector(RevisionCollector):
 
     mark = self._mark_generator.gen_id()
     self.dump_file.write('blob\n'.encode('utf-8'))
-    self.dump_file.write('mark :%d\n'.encode('utf-8') % (mark,))
-    self.dump_file.write('data %d\n'.encode('utf-8') % (len(fulltext),))
-    self.dump_file.write(fulltext.encode('utf-8'))
+    self.dump_file.write(('mark :%d\n' % (mark,)).encode('utf-8'))
+    self.dump_file.write(('data %d\n' % (len(fulltext),)).encode('utf-8'))
+    if isinstance(fulltext, str):
+      self.dump_file.write(fulltext.encode('latin-1')) # Use latin-1 to preserve bytes as intended? or utf-8?
+    else:
+      self.dump_file.write(fulltext)
     self.dump_file.write('\n'.encode('utf-8'))
     cvs_rev.revision_reader_token = mark
 

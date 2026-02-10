@@ -59,7 +59,7 @@ class GitRevisionWriter(MirrorUpdater):
 
   def delete_file(self, cvs_rev, post_commit):
     MirrorUpdater.delete_file(self, cvs_rev, post_commit)
-    self.f.write('D %s\n' % (cvs_rev.cvs_file.cvs_path,))
+    self.f.write(('D %s\n' % (cvs_rev.cvs_file.cvs_path,)).encode('utf-8'))
 
   def branch_file(self, cvs_symbol):
     MirrorUpdater.branch_file(self, cvs_symbol)
@@ -97,9 +97,9 @@ class GitRevisionMarkWriter(GitRevisionWriter):
       mode = '100644'
 
     self.f.write(
-        'M %s :%d %s\n'
+        ('M %s :%d %s\n'
         % (mode, cvs_item.revision_reader_token,
-           cvs_item.cvs_file.cvs_path,)
+           cvs_item.cvs_file.cvs_path,)).encode('utf-8')
         )
 
 
@@ -122,8 +122,8 @@ class GitRevisionInlineWriter(GitRevisionWriter):
       mode = '100644'
 
     self.f.write(
-        'M %s inline %s\n'
-        % (mode, cvs_item.cvs_file.cvs_path,)
+        ('M %s inline %s\n'
+        % (mode, cvs_item.cvs_file.cvs_path,)).encode('utf-8')
         )
 
     if isinstance(cvs_item, CVSSymbol):
@@ -135,9 +135,12 @@ class GitRevisionInlineWriter(GitRevisionWriter):
     # and eol_style here:
     fulltext = self.revision_reader.get_content(cvs_rev)
 
-    self.f.write('data %d\n' % (len(fulltext),))
-    self.f.write(fulltext)
-    self.f.write('\n')
+    self.f.write(('data %d\n' % (len(fulltext),)).encode('utf-8'))
+    if isinstance(fulltext, str):
+        self.f.write(fulltext.encode('latin-1')) # preserve bytes? utf-8?
+    else:
+        self.f.write(fulltext)
+    self.f.write(b'\n')
 
   def finish(self):
     GitRevisionWriter.finish(self)
@@ -293,24 +296,24 @@ class GitOutputOption(DVCSOutputOption):
     self._mirror.start_commit(svn_commit.revnum)
     if isinstance(lod, Trunk):
       # FIXME: is this correct?:
-      self.f.write('commit refs/heads/master\n')
+      self.f.write('commit refs/heads/master\n'.encode('utf-8'))
     else:
-      self.f.write('commit refs/heads/%s\n' % (lod.name,))
+      self.f.write(('commit refs/heads/%s\n' % (lod.name,)).encode('utf-8'))
     mark = self._create_commit_mark(lod, svn_commit.revnum)
     logger.normal(
         'Writing commit r%d on %s (mark :%d)'
         % (svn_commit.revnum, lod, mark,)
         )
-    self.f.write('mark :%d\n' % (mark,))
+    self.f.write(('mark :%d\n' % (mark,)).encode('utf-8'))
     self.f.write(
-        'committer %s %d +0000\n' % (author, svn_commit.date,)
+        ('committer %s %d +0000\n' % (author, svn_commit.date,)).encode('utf-8')
         )
-    self.f.write('data %d\n' % (len(log_msg),))
-    self.f.write('%s\n' % (log_msg,))
+    self.f.write(('data %d\n' % (len(log_msg),)).encode('utf-8'))
+    self.f.write(('%s\n' % (log_msg,)).encode('utf-8'))
     for cvs_rev in svn_commit.get_cvs_items():
       self.revision_writer.process_revision(cvs_rev, post_commit=False)
 
-    self.f.write('\n')
+    self.f.write(b'\n')
     self._mirror.end_commit()
 
   def process_post_commit(self, svn_commit):
@@ -326,26 +329,26 @@ class GitOutputOption(DVCSOutputOption):
 
     self._mirror.start_commit(svn_commit.revnum)
     # FIXME: is this correct?:
-    self.f.write('commit refs/heads/master\n')
+    self.f.write('commit refs/heads/master\n'.encode('utf-8'))
     mark = self._create_commit_mark(None, svn_commit.revnum)
     logger.normal(
         'Writing post-commit r%d on Trunk (mark :%d)'
         % (svn_commit.revnum, mark,)
         )
-    self.f.write('mark :%d\n' % (mark,))
+    self.f.write(('mark :%d\n' % (mark,)).encode('utf-8'))
     self.f.write(
-        'committer %s %d +0000\n' % (author, svn_commit.date,)
+        ('committer %s %d +0000\n' % (author, svn_commit.date,)).encode('utf-8')
         )
-    self.f.write('data %d\n' % (len(log_msg),))
-    self.f.write('%s\n' % (log_msg,))
+    self.f.write(('data %d\n' % (len(log_msg),)).encode('utf-8'))
+    self.f.write(('%s\n' % (log_msg,)).encode('utf-8'))
     self.f.write(
-        'merge :%d\n'
-        % (self._get_source_mark(source_lod, svn_commit.revnum),)
+        ('merge :%d\n'
+        % (self._get_source_mark(source_lod, svn_commit.revnum),)).encode('utf-8')
         )
     for cvs_rev in svn_commit.cvs_revs:
       self.revision_writer.process_revision(cvs_rev, post_commit=True)
 
-    self.f.write('\n')
+    self.f.write(b'\n')
     self._mirror.end_commit()
 
   def _get_source_mark(self, source_lod, revnum):
@@ -408,18 +411,18 @@ class GitOutputOption(DVCSOutputOption):
         for cvs_symbol in cvs_symbols:
           cvs_files_to_delete.discard(cvs_symbol.cvs_file)
 
-    self.f.write('commit %s\n' % (git_branch,))
-    self.f.write('mark :%d\n' % (mark,))
-    self.f.write('committer %s %d +0000\n' % (author, svn_commit.date,))
-    self.f.write('data %d\n' % (len(log_msg),))
-    self.f.write('%s\n' % (log_msg,))
+    self.f.write(('commit %s\n' % (git_branch,)).encode('utf-8'))
+    self.f.write(('mark :%d\n' % (mark,)).encode('utf-8'))
+    self.f.write(('committer %s %d +0000\n' % (author, svn_commit.date,)).encode('utf-8'))
+    self.f.write(('data %d\n' % (len(log_msg),)).encode('utf-8'))
+    self.f.write(('%s\n' % (log_msg,)).encode('utf-8'))
 
     # Only record actual DVCS ancestry for the primary sprout parent,
     # all the rest are effectively cherrypicks.
     if is_initial_lod_creation:
       self.f.write(
-          'from :%d\n'
-          % (self._get_source_mark(p_source_lod, p_source_revnum),)
+          ('from :%d\n'
+          % (self._get_source_mark(p_source_lod, p_source_revnum),)).encode('utf-8')
           )
 
     for (source_revnum, source_lod, cvs_symbols,) in source_groups:
@@ -428,9 +431,9 @@ class GitOutputOption(DVCSOutputOption):
 
     if is_initial_lod_creation:
       for cvs_file in cvs_files_to_delete:
-        self.f.write('D %s\n' % (cvs_file.cvs_path,))
+        self.f.write(('D %s\n' % (cvs_file.cvs_path,)).encode('utf-8'))
 
-    self.f.write('\n')
+    self.f.write(b'\n')
     return mark
 
   def process_branch_commit(self, svn_commit):
@@ -465,8 +468,8 @@ class GitOutputOption(DVCSOutputOption):
       category = 'tags'
     else:
       raise InternalError()
-    self.f.write('reset refs/%s/%s\n' % (category, symbol.name,))
-    self.f.write('from :%d\n' % (mark,))
+    self.f.write(('reset refs/%s/%s\n' % (category, symbol.name,)).encode('utf-8'))
+    self.f.write(('from :%d\n' % (mark,)).encode('utf-8'))
 
   def get_tag_fixup_branch_name(self, svn_commit):
     # The branch name to use for the "tag fixup branches".  The
@@ -509,8 +512,8 @@ class GitOutputOption(DVCSOutputOption):
       # Store the mark of the last commit to the fixup branch as the
       # value of the tag:
       self._set_symbol(svn_commit.symbol, mark)
-      self.f.write('reset %s\n' % (fixup_branch_name,))
-      self.f.write('\n')
+      self.f.write(('reset %s\n' % (fixup_branch_name,)).encode('utf-8'))
+      self.f.write(b'\n')
 
       if self.tie_tag_fixup_branches:
         source_lod = source_groups[0][1]
@@ -521,18 +524,18 @@ class GitOutputOption(DVCSOutputOption):
         author = self._map_author(Ctx().username)
         log_msg = self._get_log_msg_for_ancestry_tie(svn_commit)
 
-        self.f.write('commit %s\n' % (source_lod_git_branch,))
-        self.f.write('mark :%d\n' % (mark2,))
-        self.f.write('committer %s %d +0000\n' % (author, svn_commit.date,))
-        self.f.write('data %d\n' % (len(log_msg),))
-        self.f.write('%s\n' % (log_msg,))
+        self.f.write(('commit %s\n' % (source_lod_git_branch,)).encode('utf-8'))
+        self.f.write(('mark :%d\n' % (mark2,)).encode('utf-8'))
+        self.f.write(('committer %s %d +0000\n' % (author, svn_commit.date,)).encode('utf-8'))
+        self.f.write(('data %d\n' % (len(log_msg),)).encode('utf-8'))
+        self.f.write(('%s\n' % (log_msg,)).encode('utf-8'))
 
         self.f.write(
-            'merge :%d\n'
-            % (mark,)
+            ('merge :%d\n'
+            % (mark,)).encode('utf-8')
             )
 
-        self.f.write('\n')
+        self.f.write(b'\n')
 
     self._mirror.end_commit()
 
