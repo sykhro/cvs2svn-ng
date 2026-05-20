@@ -7,7 +7,7 @@ name = "cvs2svn-ng"
 dynamic = ["version"]
 description = "Converts CVS repositories to Subversion repositories."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = []
 license-files = ["COPYING"]
 classifiers = [

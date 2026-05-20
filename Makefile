@@ -1,76 +1,62 @@
-# Makefile for packaging and installing cvs2svn.
-
-# The python interpreter to be used can be overridden here or via
-# something like "make ... PYTHON=/path/to/python2.5".  Please note
-# that this option only affects the "install" and "check" targets:
-PYTHON := python
-
-all:
-	@echo "Supported make targets:"
-	@echo "    man -- Create manpages for the main programs"
-	@echo "    install -- Install software using distutils"
-	@echo "    dist -- Create an installation package"
-	@echo "    check -- Run cvs2svn tests"
-	@echo "    pycheck -- Use pychecker to check cvs2svn Python code"
-	@echo "    clean -- Clean up source tree and temporary directory"
-
-man: cvs2svn.1 cvs2git.1 cvs2bzr.1
-
-cvs2svn.1:
-	./cvs2svn --man >$@
-
-cvs2git.1:
-	./cvs2git --man >$@
-
-cvs2bzr.1:
-	./cvs2bzr --man >$@
-
-dist:
-	./dist.sh
-
-install:
-	@case "${DESTDIR}" in \
-	"") \
-	    echo ${PYTHON} ./setup.py install ; \
-	    ${PYTHON} ./setup.py install ; \
-	    ;; \
-	*) \
-	    echo ${PYTHON} ./setup.py install --root=${DESTDIR} ; \
-	    ${PYTHON} ./setup.py install --root=${DESTDIR} ; \
-	;; \
-	esac
-
-check: clean
-	${PYTHON} ./run-tests.py
-
-pycheck:
-	pychecker cvs2svn_lib/*.py
-
-clean:
-	-rm -rf cvs2svn-*.tar.gz build cvs2svn-tmp cvs2*.1
-	-for d in . cvs2svn_lib cvs2svn_rcsparse svntest contrib ; \
-	do \
-		rm -f $$d/*.pyc $$d/*.pyo; \
-	done
-
-# Create a docker image, tagged `cvs2svn`, which is ready to run
-# `cvs2svn` (as its ENTRYPOINT). The image can be used as follows:
+# Makefile for running cvs2svn-ng via Docker with hardened defaults.
 #
-#     docker run -it --rm \
-#         --mount 'src=/path/to/my/cvs,dst=/cvs,readonly' \
-#         --mount 'type=volume,src=/tmp,dst=/tmp' \
-#         cvs2svn [OPTS] /cvs
+# This workspace uses cvs2svn-ng (Python 3) as the default conversion tool.
 #
-# By default, temporary files are stored under `/tmp`, so this
-# invocation mounts your local `/tmp` directory there. You should
-# either make sure that your `/tmp` partition has enough free space,
-# or mount a different directory there.
-.PHONY: docker-image
-docker-image:
-	docker build --target=run -t cvs2svn .
+# Targets:
+#   docker-test   - run the unit/integration tests
+#   docker-build  - build the runtime image
+#   docker-run    - run cvs2git inside the container with hardened defaults
+#
+# Required variables for docker-run:
+#   CVS_REPO_DIR=/abs/path/to/cvs-repo
+#   CFG_DIR=/abs/path/to/config
+#   OUT_DIR=/abs/path/to/out
+# Optional:
+#   TMP_DIR=/abs/path/to/tmp   (if omitted, /tmp is tmpfs)
+#   CVS2GIT_ARGS='--options=/cfg/cvs2git.options.py'
 
-# Create a docker image, then use it to run the automated tests.
-.PHONY: docker-test
+IMAGE ?= cvs2svn-ng
+
+.PHONY: docker-build docker-test docker-run
+
+docker-build:
+	docker build -t $(IMAGE) .
+
 docker-test:
-	docker build --target=test -t cvs2svn-test .
-	docker run -it --rm --mount 'type=tmpfs,dst=/tmp' cvs2svn-testing
+	docker run --rm \
+	  --network none \
+	  --cap-drop ALL \
+	  --security-opt no-new-privileges \
+	  --pids-limit 512 \
+	  --memory 4g \
+	  --cpus 4 \
+	  --mount 'type=tmpfs,dst=/tmp' \
+	  --workdir /app \
+	  --entrypoint /usr/local/bin/python \
+	  $(IMAGE) \
+	  ./run-tests.py
+
+docker-run:
+	@test -n "$(CVS_REPO_DIR)" || (echo "CVS_REPO_DIR is required" >&2; exit 2)
+	@test -n "$(CFG_DIR)" || (echo "CFG_DIR is required" >&2; exit 2)
+	@test -n "$(OUT_DIR)" || (echo "OUT_DIR is required" >&2; exit 2)
+	@mkdir -p "$(OUT_DIR)"
+	@if test -n "$(TMP_DIR)"; then mkdir -p "$(TMP_DIR)"; fi
+	@TMP_MOUNT="--tmpfs /tmp:rw,noexec,nosuid,nodev"; \
+	if test -n "$(TMP_DIR)"; then TMP_MOUNT="--mount type=bind,src=$(TMP_DIR),dst=/tmp"; fi; \
+	docker run -it --rm \
+	  --network none \
+	  --read-only \
+	  --cap-drop ALL \
+	  --security-opt no-new-privileges \
+	  --pids-limit 512 \
+	  --memory 4g \
+	  --cpus 4 \
+	  --workdir /work \
+	  --mount type=bind,src=$(CVS_REPO_DIR),dst=/cvs,readonly \
+	  --mount type=bind,src=$(CFG_DIR),dst=/cfg,readonly \
+	  --mount type=bind,src=$(OUT_DIR),dst=/out \
+	  $$TMP_MOUNT \
+	  --entrypoint /app/.venv/bin/cvs2git \
+	  $(IMAGE) \
+	  $(CVS2GIT_ARGS)
