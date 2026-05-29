@@ -73,7 +73,10 @@ class ExternalBlobGenerator(RevisionCollector):
             blob_filename,
             ],
         stdin=subprocess.PIPE,
+        stdout=None,
+        stderr=None,
         )
+    self._pipe_stdin = self._pipe.stdin
 
   def _process_symbol(self, cvs_symbol, cvs_file_items):
     """Record the original source of CVS_SYMBOL.
@@ -98,8 +101,9 @@ class ExternalBlobGenerator(RevisionCollector):
       # doesn't grow very large.  The default ASCII protocol is used so
       # that this works without changes on systems that distinguish
       # between text and binary files.
-      pickle.dump((cvs_file_items.cvs_file.rcs_path, marks), self._pipe.stdin)
-      self._pipe.stdin.flush()
+      assert self._pipe_stdin is not None
+      pickle.dump((cvs_file_items.cvs_file.rcs_path, marks), self._pipe_stdin)
+      self._pipe_stdin.flush()
 
     # Now that all CVSRevisions' revision_reader_tokens are set,
     # iterate through symbols and set their tokens to those of their
@@ -111,7 +115,8 @@ class ExternalBlobGenerator(RevisionCollector):
         self._process_symbol(cvs_tag, cvs_file_items)
 
   def finish(self):
-    self._pipe.stdin.close()
+    assert self._pipe_stdin is not None
+    self._pipe_stdin.close()
     logger.normal('Waiting for generate_blobs.py to finish...')
     returncode = self._pipe.wait()
     if returncode:
@@ -120,5 +125,3 @@ class ExternalBlobGenerator(RevisionCollector):
           )
     else:
       logger.normal('generate_blobs.py is done.')
-
-
