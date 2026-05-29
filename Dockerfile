@@ -5,7 +5,7 @@
 # Pins:
 # - Python base image is pinned by digest for reproducible builds.
 # - uv is pinned by digest (copied from the official uv image).
-FROM python:3.13-slim@sha256:2c285c669cc837aa3bcf1af23ea1932b7b5214f9c9d3aad22417446ad91cb4fb
+FROM python:3.13-slim@sha256:2c285c669cc837aa3bcf1af23ea1932b7b5214f9c9d3aad22417446ad91cb4fb AS run
 
 # Install system dependencies required by cvs2svn-ng.
 # Keep the image minimal and avoid recommended packages.
@@ -42,3 +42,6 @@ VOLUME ["/cvs"]
 
 # Default to showing help.
 CMD ["cvs2svn", "--help"]
+
+FROM run AS test
+CMD ["python", "./run-tests.py"]
