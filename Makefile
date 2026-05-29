@@ -42,7 +42,7 @@ docker-run:
 	@test -n "$(OUT_DIR)" || (echo "OUT_DIR is required" >&2; exit 2)
 	@mkdir -p "$(OUT_DIR)"
 	@if test -n "$(TMP_DIR)"; then mkdir -p "$(TMP_DIR)"; fi
-	@TMP_MOUNT="--tmpfs /tmp:rw,noexec,nosuid,nodev"; \
+	@TMP_MOUNT="--tmpfs /tmp:rw,noexec,nosuid,nodev,size=35g"; \
 	if test -n "$(TMP_DIR)"; then TMP_MOUNT="--mount type=bind,src=$(TMP_DIR),dst=/tmp"; fi; \
 	docker run -it --rm \
 	  --network none \
@@ -50,8 +50,9 @@ docker-run:
 	  --cap-drop ALL \
 	  --security-opt no-new-privileges \
 	  --pids-limit 512 \
-	  --memory 4g \
+	  --memory 16g \
 	  --cpus 4 \
+	  --user $$(id -u):$$(id -g) \
 	  --workdir /work \
 	  --mount type=bind,src=$(CVS_REPO_DIR),dst=/cvs,readonly \
 	  --mount type=bind,src=$(CFG_DIR),dst=/cfg,readonly \
