@@ -1496,6 +1496,27 @@ def _internal_run_tests(test_list, testnums, parallel, srcdir, progress_func):
   """
 
   exit_code = 0
+
+  # Summary counters (based on the per-test exit codes returned by TestRunner.run()).
+  #
+  # Mapping (see svntest.testcase.TestCase._result_map and subclasses):
+  #   0 => PASS / XFAIL / XPASS (wimp)  (overall success)
+  #   1 => FAIL / XPASS (strict)        (overall failure)
+  #   2 => SKIP
+  summary = {
+    'pass': 0,
+    'fail': 0,
+    'skip': 0,
+  }
+
+  # Collect unexpected outcomes to print at the end.
+  # Each entry: (index, result_text, description)
+  unexpected = []
+
+  # Collect skipped tests too (useful when running with filters).
+  # Each entry: (index, result_text, description)
+  skipped = []
+
   finished_tests = []
   tests_started = 0
 
@@ -1508,8 +1529,22 @@ def _internal_run_tests(test_list, testnums, parallel, srcdir, progress_func):
   if not parallel:
     for i, testnum in enumerate(testnums):
 
-      if run_one_test(testnum, test_list) == 1:
-          exit_code = 1
+      runner = TestRunner(test_list[testnum], testnum)
+      rc = runner.run()
+
+      if rc == 1:
+        exit_code = 1
+
+      if rc == 0:
+        summary['pass'] += 1
+      elif rc == 1:
+        summary['fail'] += 1
+        # FAIL or XPASS (strict)
+        unexpected.append((testnum, 'FAIL', runner.pred.description))
+      elif rc == 2:
+        summary['skip'] += 1
+        skipped.append((testnum, 'SKIP', runner.pred.description))
+
       # signal progress
       if progress_func:
         progress_func(i+1, len(testnums))
@@ -1545,6 +1580,37 @@ def _internal_run_tests(test_list, testnums, parallel, srcdir, progress_func):
           sys.stdout.write(line)
       if result == 1:
         exit_code = 1
+
+      if result == 0:
+        summary['pass'] += 1
+      elif result == 1:
+        summary['fail'] += 1
+        # In parallel mode we don't have the TestRunner instance here, so
+        # reconstruct the description from the test list.
+        runner = TestRunner(test_list[index], index)
+        unexpected.append((index, 'FAIL', runner.pred.description))
+      elif result == 2:
+        summary['skip'] += 1
+        runner = TestRunner(test_list[index], index)
+        skipped.append((index, 'SKIP', runner.pred.description))
+
+  # Print unexpected outcomes (failures / XPASS) at the end.
+  if unexpected:
+    print("\nUNEXPECTED RESULTS:")
+    for (idx, how, desc) in unexpected:
+      print("  %s: %s %d: %s" % (how, os.path.basename(sys.argv[0]), idx, desc))
+
+  # Print skipped tests at the end.
+  if skipped:
+    print("\nSKIPPED TESTS:")
+    for (idx, how, desc) in skipped:
+      print("  %s: %s %d: %s" % (how, os.path.basename(sys.argv[0]), idx, desc))
+
+  # Print a concise summary at the end (useful in CI logs).
+  total = len(testnums)
+  print("\nSUMMARY: total=%d pass=%d fail=%d skip=%d" % (
+    total, summary['pass'], summary['fail'], summary['skip'],
+  ))
 
   svntest.sandbox.cleanup_deferred_test_paths()
   return exit_code

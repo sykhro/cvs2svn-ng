@@ -9,6 +9,4 @@ val-tags
 /cvs2hg-tmp
 /cvs2svn-tmp
 /*.tar.gz
-/svntest
 /svn-test-work
-
